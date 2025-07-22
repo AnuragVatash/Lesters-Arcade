@@ -1,103 +1,122 @@
-import Image from "next/image";
+import Link from "next/link";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const hackingGames = [
+    {
+      id: "motherboard-laser",
+      title: "Motherboard Laser",
+      description: "Redirect laser beam using mirrors to hit the target",
+      difficulty: "Medium",
+      path: "/hacks/motherboard-laser"
+    },
+    {
+      id: "data-crack",
+      title: "Data Crack",
+      description: "Align moving blocks with the red line using precise timing",
+      difficulty: "Hard",
+      path: "/hacks/data-crack"
+    },
+    {
+      id: "anagram-password",
+      title: "Anagram Password",
+      description: "Unscramble 5-letter words to find the password",
+      difficulty: "Easy",
+      path: "/hacks/anagram"
+    },
+    {
+      id: "voltlab-puzzle",
+      title: "VOLTlab",
+      description: "Connect numbers to multipliers to match target voltage",
+      difficulty: "Medium",
+      path: "/hacks/voltlab"
+    },
+    {
+      id: "fingerprint-scanner",
+      title: "Fingerprint Scanner",
+      description: "Match fingerprint fragments to the target pattern",
+      difficulty: "Medium",
+      path: "/hacks/fingerprint-match"
+    },
+    {
+      id: "circuit-panel",
+      title: "Circuit Panel",
+      description: "Slide columns to complete the electrical circuit",
+      difficulty: "Easy",
+      path: "/hacks/circuit-slide"
+    },
+    {
+      id: "bruteforce-exe",
+      title: "BruteForce.exe",
+      description: "Stop rolling letters to reveal the 8-character password",
+      difficulty: "Hard",
+      path: "/hacks/bruteforce"
+    },
+    {
+      id: "fingerprint-cloner",
+      title: "Fingerprint Cloner",
+      description: "Cycle through fingerprint slices to match the target",
+      difficulty: "Medium",
+      path: "/hacks/fingerprint-cloner"
+    }
+  ];
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case "Easy": return "text-green-400";
+      case "Medium": return "text-yellow-400";
+      case "Hard": return "text-red-400";
+      default: return "text-gray-400";
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-black text-green-400 font-mono">
+      {/* Header */}
+      <div className="border-b border-green-400 p-6">
+        <h1 className="text-4xl font-bold text-center mb-2">GTA ONLINE</h1>
+        <h2 className="text-2xl text-center mb-2">HACKING SIMULATOR</h2>
+        <p className="text-center text-sm opacity-75">Training Module v2.1</p>
+      </div>
+
+      {/* Main Content */}
+      <div className="container mx-auto px-6 py-8">
+        <div className="mb-8">
+          <h3 className="text-xl mb-4">SELECT TRAINING MODULE:</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {hackingGames.map((game) => (
+              <Link 
+                key={game.id} 
+                href={game.path}
+                className="block border border-green-400 p-4 hover:bg-green-400 hover:text-black transition-colors duration-200"
+              >
+                <div className="mb-2">
+                  <h4 className="text-lg font-bold">{game.title}</h4>
+                  <span className={`text-sm ${getDifficultyColor(game.difficulty)}`}>
+                    [{game.difficulty}]
+                  </span>
+                </div>
+                <p className="text-sm opacity-75">{game.description}</p>
+              </Link>
+            ))}
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* Instructions */}
+        <div className="border border-green-400 p-4 mt-8">
+          <h3 className="text-lg font-bold mb-2">INSTRUCTIONS:</h3>
+          <ul className="text-sm space-y-1 opacity-75">
+            <li>• Select a hacking module to begin training</li>
+            <li>• Each module simulates real GTA Online conditions</li>
+            <li>• Practice until you can complete under time pressure</li>
+            <li>• Press ESC to return to this menu from any module</li>
+          </ul>
+        </div>
+
+        {/* Footer */}
+        <div className="text-center mt-8 text-xs opacity-50">
+          <p>Lifeinvader Security Systems - Selling your secrets since 1996</p>
+        </div>
+      </div>
     </div>
   );
 }
