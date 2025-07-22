@@ -1,9 +1,9 @@
+/* GTA Terminal Styling */
+@import url('https://fonts.googleapis.com/css2?family=Courier+New:wght@400;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* GTA Terminal Styling */
-@import url('https://fonts.googleapis.com/css2?family=Courier+New:wght@400;700&display=swap');
 
 * {
   box-sizing: border-box;
