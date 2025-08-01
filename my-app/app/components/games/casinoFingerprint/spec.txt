@@ -1,0 +1,15 @@
+This is going to be the spec for the casino fingerprint component:
+- The top left has a connection timeout header with a countdown timer below it
+- Below that, you have a header called 'components' which houses the fingerprint pieces. You have to select the four correct fingerprints
+- Below that, you have a scramble countdown which is its own header, like the other two pieces, and is housed inside of the 'components' component. The countdown is made up of bars which are essentially exclamation marks
+To the right side of these three components is a clone target component and below that a deciphered signals component. The clone target component is comprised mainly of the large fingerprint to which you are trying to match the pieces inside of the clone target component.
+On the right side is an access attempts component which is comprised of six boxes highlighting how many attempts you have after each attempt. One red box turns black.Now, below this clone target component is a deciphered signals component. In this component, you have four boxes, each with its own large fingerprint, which will be the four challenges you have to complete before you have succeeded in the overall mini-game.
+Now, outside of the actual component, there are some UI pieces which would also be useful to copy. For example, at the top (essentially of what you are inside of a some sort of screen or some sort of server) there is a bar that says Signal Made Up Of White Bars Showing.Emulating some type of signal strength. It's a box with inside is like white bars going from left to right which are rectangular and thin showing the signal strength, and then all the way to the right side of the outer component is a Wi-Fi signal component or not component like image, and then also a battery image.Behind the actual mini-game component, with all the components I was referencing earlier, there are some boxes open which emulate computer terminals, etc.The main components that actually move would be:
+- Timer
+- Selection for the components
+- Countdown
+- Attempts
+- Going to the next component
+And then obviously the success screen which I have to still spec out.
+as you move around in the components component which is comprised of the eight fingerprints as well as the scramble countdown whenever you select a different fingerprint which is basically four angles around the image which you're currently looking at and the fingerprints are in a two by four setting
+and then so just for the audio in the background there's like random like computer chirps and things like that you know beeps like fast rapid beeps but there's like some pauses in between
