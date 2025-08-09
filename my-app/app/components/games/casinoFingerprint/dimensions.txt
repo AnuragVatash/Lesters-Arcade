@@ -1,0 +1,9 @@
+The dimensions are based on a 1920x1080p screenshot from the game will look different based on the resolution
+These are approximate resolutions meant to be used as a guide for the scaling between certain components based on the size of our images and component
+for example if our component is 1280x720 and our status bar stretches 1280 pixels, the rest of the components should also be scaled down to match the scale from the original.
+status bar:1920x56
+Outer box housing all components like timer, fingerprints, target: 1251x992
+timer: 471 x 101
+components_box(housing fingerprints):471 x 780
+target_box aka large fingerpritn on right side: 692 x 683
+deciphered_signals_box aka the current and upcoming fingerprints shown in the order the user has to solve them.:689 x 200

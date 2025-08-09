@@ -30,10 +30,31 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 export default function CasinoFingerprint() {
+  // Base scale from 1920x1080 to our 1280x720 canvas
+  const SCALE = 1280 / 1920;
+  const scaled = (n: number) => Math.round(n * SCALE);
+
+  // Dimensions from dimensions.txt (1920 base)
+  const DIMENSIONS = {
+    outerBox: { w: 1251, h: 992 },
+    timer: { w: 471, h: 101 },
+    componentsBox: { w: 471, h: 780 },
+    targetBox: { w: 692, h: 683 },
+    decipheredSignals: { w: 689, h: 200 },
+    statusBar: { w: 1920, h: 56 },
+  } as const;
+
+  // Each fingerprint piece is 126x126 at 1920 width; scale to our 1280 width
+  const TILE_SIZE = scaled(126); // 84px when SCALE = 2/3
+  // Reduce grid gap to 25% of prior spacing so tiles fit comfortably
+  const GRID_GAP = 0; // vertical gap handled by per-tile marginBottom
+  const GRID_COLUMN_GAP = 12; // explicit 12px horizontal gap between columns
+
   const [isLocked, setIsLocked] = useState(true);
   const [gridPieces, setGridPieces] = useState<Piece[]>([]);
   const [fingerprintOrder, setFingerprintOrder] = useState([0,1,2,3,4,5,6,7]);
   const [selectedSetIds, setSelectedSetIds] = useState<number[]>([]);
+  // targetSetId not used in the current right panel rendering, but retained for future logic
   const [targetSetId, setTargetSetId] = useState<number | null>(null);
   const [selectedTileIndexes, setSelectedTileIndexes] = useState<Set<number>>(new Set());
 
@@ -84,28 +105,45 @@ export default function CasinoFingerprint() {
   return (
     <div className='flex items-center justify-center min-h-screen'>
       <div className='relative bg-black text-white w-[1280px] h-[720px] mx-auto'>
-        <img className='ml-auto' src={'/casinoFingerprints/status_bar.png'} alt='status bar' />
-        <div className="flex flex-row">
-          <div className='w-1/2 flex items-center justify-center gap-8 flex-col'>
-            <img className='w-[90%]' src={'/casinoFingerprints/timer.png'} alt='timer' />
+        <img
+          className='ml-auto'
+          src={'/casinoFingerprints/status_bar.png'}
+          alt='status bar'
+          style={{ width: '100%', height: scaled(DIMENSIONS.statusBar.h) }}
+        />
 
-            <div className="relative w-full px-8">
-              <img src={'/casinoFingerprints/fp_temp.png'} alt="Fingerprint Component Background" className="w-full" />
-              <div className="ml-[36px] absolute top-0 left-0 w-[89%] h-[80%] p-12">
-                <div className="grid grid-cols-2 gap-3 w-full h-[102.5%] mt-8 ml-7 bg-transparent">
+        {/* Constrain the inner game area to the scaled outer box width/height */}
+        <div className="mx-auto" style={{ width: scaled(DIMENSIONS.outerBox.w), height: scaled(DIMENSIONS.outerBox.h) }}>
+          <div className="flex flex-row items-start justify-between h-full">
+            {/* Left column: timer + components */}
+            <div className='flex flex-col items-center gap-2' style={{ width: scaled(DIMENSIONS.componentsBox.w) }}>
+              <img className='w-full' src={'/casinoFingerprints/timer.png'} alt='timer' style={{ height: scaled(DIMENSIONS.timer.h) }} />
+
+            <div className="relative w-full" style={{ height: scaled(DIMENSIONS.componentsBox.h) }}>
+              <img
+                src={'/casinoFingerprints/fp_temp.png'}
+                alt="Fingerprint Component Background"
+                className="w-full h-full object-contain"
+              />
+              <div className="absolute inset-0" style={{ padding: scaled(16) }}>
+                <div
+                  className="grid w-full h-full bg-transparent content-start justify-center"
+                  style={{ gridTemplateColumns: `repeat(2, ${TILE_SIZE}px)`, columnGap: GRID_COLUMN_GAP, rowGap: 0, marginTop: 30 }}
+                >
                   {piecesToRender.map((piece, index) => (
                     <div
                       key={`${piece.setId}-${piece.index}-${index}`}
                       className={cn(
-                        'group relative cursor-pointer w-[160px] h-[160px] overflow-visible',
+                        'group relative cursor-pointer overflow-visible',
                         selectedTileIndexes.has(index) ? 'bg-white' : 'bg-neutral-800'
                       )}
+                      style={{ width: TILE_SIZE, height: TILE_SIZE, marginBottom: 12 }}
                       onClick={() => handleFingerprintClick(index)}
                     >
                       <img
                         src={tileSrc(piece)}
                         alt={`Fingerprint ${piece.index} (set ${piece.setId + 1})`}
-                        className="w-full h-full object-contain"
+                        className="absolute inset-0 w-full h-full object-contain"
                       />
                       <div className="pointer-events-none absolute inset-0 flex items-center justify-center z-10">
                         <img
@@ -119,20 +157,20 @@ export default function CasinoFingerprint() {
                 </div>
               </div>
             </div>
-          </div>
+            </div>
 
-          <div className='w-1/2 flex items-center justify-center gap-2'>
-            <div className="relative w-[90%]">
-              <img src={'/casinoFingerprints/fp_temp.png'} alt='Target Background' className='w-full' />
-              {targetSetId !== null && (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <img
-                    src={`/casinoFingerprints/${PRINT_SETS[targetSetId].dir}/fpFull.${PRINT_SETS[targetSetId].ext}`}
-                    alt='Target Fingerprint'
-                    className='w-[70%] h-auto object-contain'
-                  />
-                </div>
-              )}
+            {/* Right column: target box and deciphered signals box stacked */}
+            <div className='flex flex-col items-center justify-start gap-4' style={{ width: scaled(DIMENSIONS.targetBox.w) }}>
+              <img
+                src={'/casinoFingerprints/target_box.png'}
+                alt='Target Box'
+                style={{ width: '100%', height: 'auto' }}
+              />
+              <img
+                src={'/casinoFingerprints/deciphered_signals_box.png'}
+                alt='Deciphered Signals Box'
+                style={{ width: '100%', height: 'auto' }}
+              />
             </div>
           </div>
         </div>
