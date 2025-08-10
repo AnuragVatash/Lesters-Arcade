@@ -111,14 +111,17 @@ export default function CasinoFingerprint() {
           alt='status bar'
           style={{ width: '100%', height: scaled(DIMENSIONS.statusBar.h) }}
         />
-
+        <div className='absolute  w-fit h-fit flex flex-row flex-nowrap bg-black/50'>
+          <h3>Press</h3>
+          <img className='ml-1 mr-1 w-6 h-6' src={'/casinoFingerprints/tab_button.png'} alt='tab button' />
+          <h3>to check if the match is correct</h3>
+        </div>
         {/* Constrain the inner game area to the scaled outer box width/height */}
         <div className="mx-auto" style={{ width: scaled(DIMENSIONS.outerBox.w), height: scaled(DIMENSIONS.outerBox.h) }}>
           <div className="flex flex-row items-start justify-between h-full">
             {/* Left column: timer + components */}
             <div className='flex flex-col items-center gap-2' style={{ width: scaled(DIMENSIONS.componentsBox.w) }}>
               <img className='w-full' src={'/casinoFingerprints/timer.png'} alt='timer' style={{ height: scaled(DIMENSIONS.timer.h) }} />
-
             <div className="relative w-full" style={{ height: scaled(DIMENSIONS.componentsBox.h) }}>
               <img
                 src={'/casinoFingerprints/fp_temp.png'}
