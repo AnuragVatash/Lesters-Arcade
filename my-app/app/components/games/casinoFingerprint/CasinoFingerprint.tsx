@@ -84,6 +84,10 @@ export default function CasinoFingerprint() {
     if (next.has(index)) {
       next.delete(index);
     } else {
+      // Enforce a maximum of 4 selected fingerprints
+      if (next.size >= 4) {
+        return;
+      }
       next.add(index);
     }
     setSelectedTileIndexes(next);
@@ -165,9 +169,9 @@ export default function CasinoFingerprint() {
             {/* Right column: target box and deciphered signals box stacked */}
             <div className='flex flex-col items-center justify-start gap-4' style={{ width: scaled(DIMENSIONS.targetBox.w) }}>
               <img
-                src={'/casinoFingerprints/target_box.png'}
+                src={'/casinoFingerprints/clone_target.png'}
                 alt='Target Box'
-                style={{ width: '100%', height: 'auto' }}
+                style={{ width: '461px', height: '455px' }}
               />
               <img
                 src={'/casinoFingerprints/deciphered_signals_box.png'}
