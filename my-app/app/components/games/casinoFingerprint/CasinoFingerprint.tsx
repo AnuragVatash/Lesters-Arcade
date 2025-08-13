@@ -57,40 +57,95 @@ export default function CasinoFingerprint() {
   // targetSetId not used in the current right panel rendering, but retained for future logic
   const [targetSetId, setTargetSetId] = useState<number | null>(null);
   const [selectedTileIndexes, setSelectedTileIndexes] = useState<Set<number>>(new Set());
+  const [currentRound, setCurrentRound] = useState(0);
+  const ROUNDS_TOTAL = 2;
+  const MAX_SELECTIONS = 4;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [resultMessage, setResultMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const shuffledOrder = shuffle(fingerprintOrder);
     setFingerprintOrder(shuffledOrder);
   }, []);
 
+  const buildRoundGrid = (target: number) => {
+    // Use ONLY the target set's pieces: 1..8
+    const pieces = [1,2,3,4,5,6,7,8].map((i) => ({ setId: target, index: i }));
+    return shuffle(pieces);
+  };
+
   const startGame = () => {
-    // pick 2 distinct print sets
     const [a, b] = shuffle(AVAILABLE_SET_IDS).slice(0, 2);
-    // pick 4 random unique pieces from each (1..8)
-    const idxs = shuffle([1,2,3,4,5,6,7,8]);
-    const aPieces = idxs.slice(0, 4).map((i) => ({ setId: a, index: i }));
-    const bPieces = shuffle([1,2,3,4,5,6,7,8]).slice(0, 4).map((i) => ({ setId: b, index: i }));
-    // mix and shuffle them
-    const mixed = shuffle([...aPieces, ...bPieces]);
+    const mixed = buildRoundGrid(a);
     setGridPieces(mixed);
     setSelectedSetIds([a, b]);
     setTargetSetId(a);
+    setSelectedTileIndexes(new Set());
+    setCurrentRound(0);
+    setResultMessage(null);
+    setIsSubmitting(false);
     setIsLocked(false);
   };
 
   const handleFingerprintClick = (index: number) => {
-    if (isLocked) return;
+    if (isLocked || isSubmitting) return;
     const next = new Set(selectedTileIndexes);
     if (next.has(index)) {
       next.delete(index);
     } else {
       // Enforce a maximum of 4 selected fingerprints
-      if (next.size >= 4) {
+      if (next.size >= MAX_SELECTIONS) {
         return;
       }
       next.add(index);
     }
     setSelectedTileIndexes(next);
+  };
+
+  const submitSelection = () => {
+    if (isLocked || isSubmitting) return;
+    if (selectedTileIndexes.size !== MAX_SELECTIONS) {
+      setResultMessage('Select exactly 4 fingerprints.');
+      return;
+    }
+    setIsSubmitting(true);
+    // Evaluate: all selected must belong to targetSetId and be indices 1..4
+    const required = new Set([1,2,3,4]);
+    const allCorrect = Array.from(selectedTileIndexes).every((tileIdx) => {
+      const piece = gridPieces[tileIdx];
+      return piece && piece.setId === targetSetId && required.has(piece.index);
+    });
+
+    setResultMessage(allCorrect ? 'Correct!' : 'Incorrect');
+
+    // Advance after a short delay
+    setTimeout(() => {
+      const [a, b] = selectedSetIds;
+      if (currentRound + 1 >= ROUNDS_TOTAL - 0) {
+        // If we were on the last round (1-based total of 2 rounds -> indices 0 and 1), reset
+        if (currentRound >= ROUNDS_TOTAL - 1) {
+          setIsLocked(true);
+          setGridPieces([]);
+          setTargetSetId(null);
+          setSelectedTileIndexes(new Set());
+          setResultMessage(null);
+          setIsSubmitting(false);
+          setCurrentRound(0);
+          return;
+        }
+      }
+
+      // Move to round 2 with the other set as target
+      const nextRound = currentRound + 1;
+      const nextTarget = targetSetId === a ? b : a;
+      const nextGrid = buildRoundGrid(nextTarget!);
+      setGridPieces(nextGrid);
+      setTargetSetId(nextTarget!);
+      setSelectedTileIndexes(new Set());
+      setCurrentRound(nextRound);
+      setResultMessage(null);
+      setIsSubmitting(false);
+    }, 1200);
   };
 
   // Fallback content (before start) shows print1 tiles in a shuffled order
@@ -105,6 +160,17 @@ export default function CasinoFingerprint() {
     const set = PRINT_SETS[p.setId];
     return `/casinoFingerprints/${set.dir}/casinofp${p.index}.${set.ext}`;
   };
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        submitSelection();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [submitSelection, isLocked, isSubmitting, selectedTileIndexes, gridPieces, targetSetId, currentRound, selectedSetIds]);
 
   return (
     <div className='flex items-center justify-center min-h-screen'>
@@ -168,11 +234,20 @@ export default function CasinoFingerprint() {
 
             {/* Right column: target box and deciphered signals box stacked */}
             <div className='flex flex-col items-center justify-start gap-4' style={{ width: scaled(DIMENSIONS.targetBox.w) }}>
-              <img
-                src={'/casinoFingerprints/clone_target.png'}
-                alt='Target Box'
-                style={{ width: '461px', height: '455px' }}
-              />
+              <div className='relative' style={{ width: '461px', height: '455px' }}>
+                <img
+                  src={'/casinoFingerprints/clone_target.png'}
+                  alt='Target Box'
+                  className='w-full h-[full] object-contain '
+                />
+                {targetSetId !== null && (
+                  <img
+                    src={`/casinoFingerprints/${PRINT_SETS[targetSetId].dir}/fpFull.png`}
+                    alt='Target Fingerprint'
+                    className='absolute inset-0 w-[88.2%] h-[80%] object-contain pointer-events-none mt-10.25'
+                  />)
+                }
+              </div>
               <img
                 src={'/casinoFingerprints/deciphered_signals_box.png'}
                 alt='Deciphered Signals Box'
@@ -193,6 +268,16 @@ export default function CasinoFingerprint() {
           </div>
         )}
       </div>
+      {resultMessage && (
+        <div className="pointer-events-none fixed inset-x-0 top-4 z-30 flex justify-center">
+          <div className={cn(
+            'px-4 py-2 rounded-md text-sm font-medium',
+            resultMessage === 'Correct!' ? 'bg-green-500 text-black' : 'bg-red-500 text-white'
+          )}>
+            {resultMessage}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
