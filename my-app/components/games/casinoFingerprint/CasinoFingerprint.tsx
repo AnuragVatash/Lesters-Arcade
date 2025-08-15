@@ -62,10 +62,13 @@ export default function CasinoFingerprint() {
   const MAX_SELECTIONS = 4;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resultMessage, setResultMessage] = useState<string | null>(null);
+  const [fallbackTargetSetId, setFallbackTargetSetId] = useState<number | null>(null);
 
   useEffect(() => {
     const shuffledOrder = shuffle(fingerprintOrder);
     setFingerprintOrder(shuffledOrder);
+    // Show a random full fingerprint before start
+    setFallbackTargetSetId(shuffle(AVAILABLE_SET_IDS)[0]);
   }, []);
 
   const buildRoundGrid = (target: number) => {
@@ -161,6 +164,8 @@ export default function CasinoFingerprint() {
     return `/casinoFingerprints/${set.dir}/casinofp${p.index}.${set.ext}`;
   };
 
+  const activeTargetSetId = targetSetId ?? fallbackTargetSetId;
+
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Tab') {
@@ -240,9 +245,9 @@ export default function CasinoFingerprint() {
                   alt='Target Box'
                   className='w-full h-[full] object-contain '
                 />
-                {targetSetId !== null && (
+                {activeTargetSetId !== null && (
                   <img
-                    src={`/casinoFingerprints/${PRINT_SETS[targetSetId].dir}/fpFull.png`}
+                    src={`/casinoFingerprints/${PRINT_SETS[activeTargetSetId].dir}/fpFull.png`}
                     alt='Target Fingerprint'
                     className='absolute inset-0 w-[88.2%] h-[80%] object-contain pointer-events-none mt-10.25'
                   />)
