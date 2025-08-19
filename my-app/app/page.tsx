@@ -1,8 +1,8 @@
-import CayoFingerprint from '@/components/games/cayoFingerprint/CayoFingerprint';
+import NumberFinder from '@/components/games/numberFinder/numberFinder';
 export default function Home() {
   return (
     <div className='bg-black min-h-screen pt-60 pl-160'>
-        <CayoFingerprint />
+        <NumberFinder/>
       </div>
   );
-}
+}1
