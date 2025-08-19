@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import CayoFingerprint from '@/components/games/cayoFingerprint/CayoFingerprint';
 import CasinoFingerprint from '@/components/games/casinoFingerprint/CasinoFingerprint';
+import NumberFinder from '@/components/games/numberFinder/numberFinder';
 import Navbar from '@/components/ui/navbar';
 import AuthPage from '@/components/auth/AuthPage';
 import UserDisplay from '@/components/ui/UserDisplay';
@@ -10,7 +11,7 @@ import LeaderboardPage from '@/components/leaderboard/LeaderboardPage';
 import { getCurrentUser, type User } from '@/lib/auth';
 import { generateTestData, type GameType } from '@/lib/leaderboard';
 
-type Game = 'casino' | 'cayo';
+type Game = 'casino' | 'cayo' | 'number';
 type Page = 'games' | 'leaderboard';
 
 export default function Home() {
@@ -62,6 +63,8 @@ export default function Home() {
         return <CasinoFingerprint user={user} />;
       case 'cayo':
         return <CayoFingerprint user={user} />;
+      case 'number':
+        return <NumberFinder />;
       default:
         return <CayoFingerprint user={user} />;
     }

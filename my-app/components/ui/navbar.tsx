@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
-type Game = 'casino' | 'cayo';
+type Game = 'casino' | 'cayo' | 'number';
 
 interface NavbarProps {
   activeGame: Game;
@@ -20,6 +20,7 @@ export default function Navbar({ activeGame, onGameChange, onLeaderboardClick }:
   const navItems = [
     { id: 'casino' as Game, label: '>>> CASINO_EXPLOIT.exe' },
     { id: 'cayo' as Game, label: '>>> CAYO_BREACH.exe' },
+    { id: 'number' as Game, label: '>>> NUMBER_FINDER.exe' },
   ];
 
   useEffect(() => {
