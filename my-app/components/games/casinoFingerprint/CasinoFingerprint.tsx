@@ -3,6 +3,11 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { submitTime, type User } from '@/lib/auth';
+import { submitTime as submitLeaderboardTime } from '@/lib/leaderboard';
+import TimeComparisonDisplay from '@/components/ui/TimeComparison';
+import ScanningPopup from '@/components/ui/ScanningPopup';
+import { useOracle } from '@/hooks/useOracle';
 
 type Piece = {
   setId: number; // which print set
@@ -29,10 +34,26 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-export default function CasinoFingerprint() {
-  // Base scale from 1920x1080 to our 1280x720 canvas
-  const SCALE = 1280 / 1920;
+interface CasinoFingerprintProps {
+  user: User;
+}
+
+export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
+  // Responsive scale based on container width
+  const [containerWidth, setContainerWidth] = useState(1280);
+  const SCALE = containerWidth / 1920;
   const scaled = (n: number) => Math.round(n * SCALE);
+
+  useEffect(() => {
+    const updateScale = () => {
+      const maxWidth = Math.min(window.innerWidth - 32, 1280); // 32px for padding
+      setContainerWidth(maxWidth);
+    };
+
+    updateScale();
+    window.addEventListener('resize', updateScale);
+    return () => window.removeEventListener('resize', updateScale);
+  }, []);
 
   // Dimensions from dimensions.txt (1920 base)
   const DIMENSIONS = {
@@ -63,10 +84,30 @@ export default function CasinoFingerprint() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resultMessage, setResultMessage] = useState<string | null>(null);
   const [fallbackTargetSetId, setFallbackTargetSetId] = useState<number | null>(null);
+  const [gameStartTime, setGameStartTime] = useState<number | null>(null);
+  const [timeComparison, setTimeComparison] = useState<any>(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanResult, setScanResult] = useState<boolean>(false);
+
+  // Oracle hook for cheat code functionality
+  const { oracleActive, resetOracle } = useOracle({
+    gameStarted: !isLocked,
+    isScanning,
+    onOracleActivated: () => {
+      // Auto-select the correct 4 pieces (indices 1-4 of target set)
+      if (targetSetId !== null) {
+        const correctIndices = new Set<number>();
+        gridPieces.forEach((piece, index) => {
+          if (piece.setId === targetSetId && [1, 2, 3, 4].includes(piece.index)) {
+            correctIndices.add(index);
+          }
+        });
+        setSelectedTileIndexes(correctIndices);
+      }
+    }
+  });
 
   useEffect(() => {
-    const shuffledOrder = shuffle(fingerprintOrder);
-    setFingerprintOrder(shuffledOrder);
     // Show a random full fingerprint before start
     setFallbackTargetSetId(shuffle(AVAILABLE_SET_IDS)[0]);
   }, []);
@@ -78,6 +119,10 @@ export default function CasinoFingerprint() {
   };
 
   const startGame = () => {
+    // Randomize fingerprint order when starting the game
+    const shuffledOrder = shuffle(fingerprintOrder);
+    setFingerprintOrder(shuffledOrder);
+    
     const [a, b] = shuffle(AVAILABLE_SET_IDS).slice(0, 2);
     const mixed = buildRoundGrid(a);
     setGridPieces(mixed);
@@ -88,6 +133,9 @@ export default function CasinoFingerprint() {
     setResultMessage(null);
     setIsSubmitting(false);
     setIsLocked(false);
+    setGameStartTime(Date.now()); // Start timing
+    setTimeComparison(null);
+    resetOracle();
   };
 
   const handleFingerprintClick = (index: number) => {
@@ -112,6 +160,7 @@ export default function CasinoFingerprint() {
       return;
     }
     setIsSubmitting(true);
+    
     // Evaluate: all selected must belong to targetSetId and be indices 1..4
     const required = new Set([1,2,3,4]);
     const allCorrect = Array.from(selectedTileIndexes).every((tileIdx) => {
@@ -119,37 +168,65 @@ export default function CasinoFingerprint() {
       return piece && piece.setId === targetSetId && required.has(piece.index);
     });
 
-    setResultMessage(allCorrect ? 'Correct!' : 'Incorrect');
+    // Check if this is the final round
+    const isFinalRound = currentRound >= ROUNDS_TOTAL - 1;
+    
+    // Start scanning animation
+    setScanResult(allCorrect && isFinalRound);
+    setIsScanning(true);
+  };
 
-    // Advance after a short delay
-    setTimeout(() => {
-      const [a, b] = selectedSetIds;
-      if (currentRound + 1 >= ROUNDS_TOTAL - 0) {
-        // If we were on the last round (1-based total of 2 rounds -> indices 0 and 1), reset
-        if (currentRound >= ROUNDS_TOTAL - 1) {
-          setIsLocked(true);
-          setGridPieces([]);
-          setTargetSetId(null);
-          setSelectedTileIndexes(new Set());
-          setResultMessage(null);
-          setIsSubmitting(false);
-          setCurrentRound(0);
-          return;
-        }
+  const handleScanComplete = (isCorrect: boolean) => {
+    setIsScanning(false);
+    
+    if (isCorrect) {
+      // Game completed successfully! Calculate time and submit to leaderboard
+      if (gameStartTime) {
+        const gameTime = Date.now() - gameStartTime;
+        const comparison = submitLeaderboardTime(user.username, gameTime, 'casino', user.isGuest);
+        setTimeComparison(comparison);
       }
+      
+      // Reset game
+      setIsLocked(true);
+      setGridPieces([]);
+      setTargetSetId(null);
+      setSelectedTileIndexes(new Set());
+      setIsSubmitting(false);
+      setCurrentRound(0);
+      setGameStartTime(null);
+    } else {
+      // Incorrect - restart the entire game
+      setIsLocked(true);
+      setGridPieces([]);
+      setTargetSetId(null);
+      setSelectedTileIndexes(new Set());
+      setIsSubmitting(false);
+      setCurrentRound(0);
+      setGameStartTime(null);
+      setResultMessage(null);
+      resetOracle();
+    }
+  };
 
-      // Move to round 2 with the other set as target
+  // Handle round progression for intermediate rounds
+  useEffect(() => {
+    if (isSubmitting && !isScanning && currentRound < ROUNDS_TOTAL - 1) {
+      // This is not the final round, continue to next round
+      const [a, b] = selectedSetIds;
       const nextRound = currentRound + 1;
       const nextTarget = targetSetId === a ? b : a;
       const nextGrid = buildRoundGrid(nextTarget!);
-      setGridPieces(nextGrid);
-      setTargetSetId(nextTarget!);
-      setSelectedTileIndexes(new Set());
-      setCurrentRound(nextRound);
-      setResultMessage(null);
-      setIsSubmitting(false);
-    }, 1200);
-  };
+      
+      setTimeout(() => {
+        setGridPieces(nextGrid);
+        setTargetSetId(nextTarget!);
+        setSelectedTileIndexes(new Set());
+        setCurrentRound(nextRound);
+        setIsSubmitting(false);
+      }, 1200);
+    }
+  }, [isSubmitting, isScanning, currentRound, selectedSetIds, targetSetId]);
 
   // Fallback content (before start) shows print1 tiles in a shuffled order
   const fallbackPieces: Piece[] = useMemo(
@@ -168,7 +245,7 @@ export default function CasinoFingerprint() {
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Tab') {
+      if (e.key === 'Tab' || e.key === 'Enter') {
         e.preventDefault();
         submitSelection();
       }
@@ -178,8 +255,8 @@ export default function CasinoFingerprint() {
   }, [submitSelection, isLocked, isSubmitting, selectedTileIndexes, gridPieces, targetSetId, currentRound, selectedSetIds]);
 
   return (
-    <div className='flex items-center justify-center min-h-screen'>
-      <div className='relative bg-black text-white w-[1280px] h-[720px] mx-auto'>
+    <div className='flex items-center justify-center min-h-screen p-2 sm:p-4'>
+      <div className='relative bg-black text-white w-full max-w-[1280px] mx-auto' style={{ width: containerWidth, height: containerWidth * 9/16 }}>
         <img
           className='ml-auto'
           src={'/casinoFingerprints/status_bar.png'}
@@ -283,6 +360,19 @@ export default function CasinoFingerprint() {
           </div>
         </div>
       )}
+      
+      {timeComparison && (
+        <TimeComparisonDisplay
+          comparison={timeComparison}
+          onClose={() => setTimeComparison(null)}
+        />
+      )}
+
+      <ScanningPopup
+        isVisible={isScanning}
+        onComplete={handleScanComplete}
+        isCorrect={scanResult}
+      />
     </div>
   );
 }

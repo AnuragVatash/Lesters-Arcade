@@ -9,8 +9,16 @@ import {
 } from "@/components/ui/carousel"
 
 import { useEffect, useRef, useState } from 'react';
+import { submitTime as submitLeaderboardTime, type User } from '@/lib/leaderboard';
+import TimeComparisonDisplay from '@/components/ui/TimeComparison';
+import ScanningPopup from '@/components/ui/ScanningPopup';
+import { useOracle } from '@/hooks/useOracle';
 
-export default function CayoFingerprint() {
+interface CayoFingerprintProps {
+	user: User;
+}
+
+export default function CayoFingerprint({ user }: CayoFingerprintProps) {
 	const baseImages = Array.from({ length: 8 }, (_, i) => `/cayoFingerprints/print1/fp${i + 1}.png`);
 	const rows = Array.from({ length: 8 });
 
@@ -19,11 +27,24 @@ export default function CayoFingerprint() {
 	const CLONE_TARGET_IMG = '/cayoFingerprints/print1/clone_target.png';
 	const DECIPHERED_IMG = '/cayoFingerprints/print1/decyphered.png';
 
-	// Scale system based on full image 1200x874 → fit our 1280x720 canvas by height
+	// Responsive scale system
+	const [containerWidth, setContainerWidth] = useState(1280);
 	const BASE = { w: 1200, h: 874 } as const;
-	const CANVAS = { w: 1280, h: 720 } as const;
-	const SCALE = CANVAS.h / BASE.h; // preserve aspect
+	const aspectRatio = BASE.w / BASE.h;
+	const containerHeight = containerWidth / aspectRatio;
+	const SCALE = containerHeight / BASE.h;
 	const scaled = (n: number) => Math.round(n * SCALE);
+
+	useEffect(() => {
+		const updateScale = () => {
+			const maxWidth = Math.min(window.innerWidth - 32, 1280); // 32px for padding
+			setContainerWidth(maxWidth);
+		};
+
+		updateScale();
+		window.addEventListener('resize', updateScale);
+		return () => window.removeEventListener('resize', updateScale);
+	}, []);
 
 	// Panel dimensions at base resolution
 	const DIM = {
@@ -33,14 +54,47 @@ export default function CayoFingerprint() {
 		rightBottom: { w: 718, h: 697 }, // Clone Target
 	} as const;
 
-	// For this mode, each row contains the images in fixed order (1..8)
-	const fixedRowImages = Array.from({ length: 8 }, () => baseImages);
+	// Generate random order for each row, ensuring no duplicates within each row
+	const [randomRowImages, setRandomRowImages] = useState<string[][]>([]);
+
+	// Remove the automatic generation on component load
 
 	const [selectedIndexes, setSelectedIndexes] = useState<number[]>(Array(8).fill(0));
 	const [initialIndexes, setInitialIndexes] = useState<number[]>(Array(8).fill(0));
 	const [resultMessage, setResultMessage] = useState<string | null>(null);
 	const initializedRef = useRef<boolean[]>(Array(8).fill(false));
 	const apiRefs = useRef<(CarouselApi | null)[]>(Array(8).fill(null));
+	const [gameStartTime, setGameStartTime] = useState<number | null>(null);
+	const [timeComparison, setTimeComparison] = useState<any>(null);
+	const [gameStarted, setGameStarted] = useState(false);
+	const [focusedRow, setFocusedRow] = useState<number>(0);
+	const [isScanning, setIsScanning] = useState(false);
+	const [scanResult, setScanResult] = useState<boolean>(false);
+
+	// Oracle hook for cheat code functionality
+	const { oracleActive, resetOracle } = useOracle({
+		gameStarted,
+		isScanning,
+		onOracleActivated: () => {
+			// Auto-navigate all carousels to correct answers
+			setTimeout(() => {
+				for (let rowIdx = 0; rowIdx < 8; rowIdx++) {
+					const api = apiRefs.current[rowIdx];
+					const imgs = randomRowImages[rowIdx] || [];
+					const expected = `fp${rowIdx + 1}.png`;
+					
+					// Find the index of the correct answer
+					const correctIndex = imgs.findIndex(src => 
+						typeof src === 'string' && src.endsWith(expected)
+					);
+					
+					if (api && correctIndex !== -1) {
+						api.scrollTo(correctIndex);
+					}
+				}
+			}, 100);
+		}
+	});
 
 	function shuffle<T>(arr: T[]): T[] {
 		const a = [...arr];
@@ -51,31 +105,155 @@ export default function CayoFingerprint() {
 		return a;
 	}
 
-	useEffect(() => {
-		// Generate a permutation of starting slides (0..7) so rows don't repeat the same start
+	// Remove automatic initialization - this will happen when Start is clicked
+
+	const startGame = () => {
+		// Generate random images when starting the game
+		const generateRandomImages = () => {
+			// Randomly select 3 rows out of 8 to start with correct answer visible
+			const easyRows = shuffle(Array.from({ length: 8 }, (_, i) => i)).slice(0, 3);
+			
+			return Array.from({ length: 8 }, (_, rowIndex) => {
+				const correctAnswer = `fp${rowIndex + 1}.png`;
+				// Get the correct answer image
+				const correctImage = baseImages.find(img => img.endsWith(correctAnswer));
+				// Get other images in order (not randomized)
+				const otherImages = baseImages.filter(img => !img.endsWith(correctAnswer));
+				
+				// Create array with correct answer and other images in order
+				const imagesForRow = [correctImage, ...otherImages];
+				
+				// If this is one of the "easy" rows, put correct answer first
+				// Otherwise, shuffle so correct answer isn't immediately visible
+				if (easyRows.includes(rowIndex)) {
+					return imagesForRow; // Correct answer is first
+				} else {
+					return shuffle(imagesForRow); // Correct answer is somewhere random
+				}
+			});
+		};
+		
+		// Randomize starting positions for each carousel
 		const starts = shuffle(Array.from({ length: 8 }, (_, i) => i));
 		setInitialIndexes(starts);
 		setSelectedIndexes(starts);
-	}, []);
+		
+		// Generate and set the random images
+		setRandomRowImages(generateRandomImages());
+		
+		setGameStarted(true);
+		setGameStartTime(Date.now());
+		setTimeComparison(null);
+		setFocusedRow(0);
+		resetOracle();
+	};
+
+	// Global keyboard navigation
+	useEffect(() => {
+		const handleGlobalKeyDown = (e: KeyboardEvent) => {
+			if (!gameStarted) return;
+			
+			if (e.key === 'ArrowUp') {
+				e.preventDefault();
+				setFocusedRow(prev => Math.max(0, prev - 1));
+			} else if (e.key === 'ArrowDown') {
+				e.preventDefault();
+				setFocusedRow(prev => Math.min(7, prev + 1));
+			} else if (e.key === 'ArrowLeft') {
+				e.preventDefault();
+				const api = apiRefs.current[focusedRow];
+				if (api) api.scrollPrev();
+			} else if (e.key === 'ArrowRight') {
+				e.preventDefault();
+				const api = apiRefs.current[focusedRow];
+				if (api) api.scrollNext();
+			}
+		};
+
+		window.addEventListener('keydown', handleGlobalKeyDown);
+		return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+	}, [gameStarted, focusedRow]);
+
+	const handleRowClick = (rowIndex: number) => {
+		if (gameStarted) {
+			setFocusedRow(rowIndex);
+		}
+	};
 
 	const handleSubmit = () => {
+		if (!gameStarted) return;
+		
 		const incorrectRows: number[] = [];
 		for (let rowIdx = 0; rowIdx < 8; rowIdx++) {
 			const api = apiRefs.current[rowIdx];
 			const currentIdx = api ? api.selectedScrollSnap() : (selectedIndexes[rowIdx] ?? 0);
-			const imgs = fixedRowImages[rowIdx];
+			const imgs = randomRowImages[rowIdx] || [];
 			const expected = `fp${rowIdx + 1}.png`;
 			const currentSrc = imgs[currentIdx];
 			const ok = typeof currentSrc === 'string' && currentSrc.endsWith(expected);
 			if (!ok) incorrectRows.push(rowIdx + 1);
 		}
 		const allCorrect = incorrectRows.length === 0;
-		setResultMessage(allCorrect ? 'Correct!' : `Incorrect (rows: ${incorrectRows.join(', ')})`);
-		setTimeout(() => setResultMessage(null), 2000);
+		
+		// Start scanning animation
+		setScanResult(allCorrect);
+		setIsScanning(true);
 	};
 
+	const handleScanComplete = (isCorrect: boolean) => {
+		setIsScanning(false);
+		
+		if (isCorrect) {
+			// Game completed successfully! Calculate time and submit to leaderboard
+			if (gameStartTime) {
+				const gameTime = Date.now() - gameStartTime;
+				const comparison = submitLeaderboardTime(user.username, gameTime, 'cayo', user.isGuest);
+				setTimeComparison(comparison);
+			}
+			
+			// Reset game
+			setGameStarted(false);
+			setGameStartTime(null);
+		} else {
+			// Incorrect - restart the entire game
+			setGameStarted(false);
+			setGameStartTime(null);
+			setResultMessage(null);
+			resetOracle();
+			// Reset all carousels to initial positions
+			setSelectedIndexes(Array(8).fill(0));
+			const starts = shuffle(Array.from({ length: 8 }, (_, i) => i));
+			setInitialIndexes(starts);
+		}
+	};
+
+	// Enter key support for submit
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			// Handle Enter key for submit
+			if (e.key === 'Enter' && gameStarted && !isScanning) {
+				e.preventDefault();
+				handleSubmit();
+			}
+		};
+
+		window.addEventListener('keydown', handleKeyDown);
+		return () => window.removeEventListener('keydown', handleKeyDown);
+	}, [gameStarted, isScanning]);
+
 	return (
-		<div className='border-2 border-[#215337] w-[1280px] h-[720px] relative'>
+		<div className='flex items-center justify-center min-h-screen p-2 sm:p-4'>
+			<div className='border-2 border-[#215337] w-full max-w-[1280px] relative' style={{ width: containerWidth, height: containerHeight }}>
+			{!gameStarted && (
+				<div className="absolute inset-0 z-20 bg-gray-900/70 backdrop-blur-[1px] flex items-center justify-center">
+					<button
+						onClick={startGame}
+						className="px-6 py-3 rounded-md bg-white text-black font-medium hover:bg-neutral-100 active:scale-[0.99] transition"
+					>
+						Start
+					</button>
+				</div>
+			)}
 			<div className="w-full h-full p-4">
 				<div className="flex flex-row items-start justify-between gap-4 w-full h-full">
 					{/* Left column */}
@@ -87,49 +265,81 @@ export default function CayoFingerprint() {
 						{/* Carousels area */}
 						<div className="flex flex-col gap-2 overflow-auto pr-2" style={{ width: '100%', height: scaled(DIM.leftBottom.h) }}>
 							{rows.map((_, rowIndex) => (
-								<div key={rowIndex} className="w-min h-min">
-									<Carousel
-										className="inline-block"
+								<div 
+									key={rowIndex} 
+									className={`w-min h-min cursor-pointer transition-all duration-200 ${
+										focusedRow === rowIndex ? 'ring-2 ring-blue-400 rounded' : ''
+									}`}
+									onClick={() => handleRowClick(rowIndex)}
+								>
+									<div
+										className="relative overflow-hidden"
 										style={{ width: scaled(DIM.leftTop.w) - 8 }}
-										opts={{ align: 'start', loop: true }}
-										setApi={(api?: CarouselApi) => {
-											if (!api) return;
-											apiRefs.current[rowIndex] = api;
-											// Guard: initialize this row only once
-											if (initializedRef.current[rowIndex]) return;
-											initializedRef.current[rowIndex] = true;
-											const update = () => {
-												setSelectedIndexes((prev) => {
-													const copy = [...prev];
-													copy[rowIndex] = api.selectedScrollSnap();
-													return copy;
-												});
-											};
-											api.on('select', update);
-											// Scroll to the random starting slide for this row on next frame then initialize selection once
-											const start = initialIndexes[rowIndex] ?? 0;
-											requestAnimationFrame(() => {
-												try { api.scrollTo(start); } catch {}
-												requestAnimationFrame(() => update());
-											});
-										}}
 									>
-										<CarouselContent className="ml-0">
-											{fixedRowImages[rowIndex].map((src, i) => (
-												<CarouselItem key={`${rowIndex}-${i}`} className="basis-auto">
-													<img src={src} className="w-70 h-auto" />
-												</CarouselItem>
-											))}
-										</CarouselContent>
-										<CarouselPrevious className="left-2 text-[#215337] size-10" />
-										<CarouselNext className="right-2 text-[#215337] size-10" />
-									</Carousel>
+										<Carousel
+											className="w-full"
+											opts={{ 
+												align: 'center', 
+												loop: true, 
+												containScroll: 'trimSnaps',
+												dragFree: false,
+												skipSnaps: false
+											}}
+											setApi={(api?: CarouselApi) => {
+												if (!api) return;
+												apiRefs.current[rowIndex] = api;
+												// Guard: initialize this row only once
+												if (initializedRef.current[rowIndex]) return;
+												initializedRef.current[rowIndex] = true;
+												
+												const update = () => {
+													setSelectedIndexes((prev) => {
+														const copy = [...prev];
+														copy[rowIndex] = api.selectedScrollSnap();
+														return copy;
+													});
+												};
+
+												api.on('select', update);
+												
+												// Scroll to the random starting slide for this row on next frame then initialize selection once
+												const start = initialIndexes[rowIndex] ?? 0;
+												requestAnimationFrame(() => {
+													try { api.scrollTo(start); } catch {}
+													requestAnimationFrame(() => update());
+												});
+											}}
+										>
+											<CarouselContent className="ml-0">
+												{(randomRowImages[rowIndex] || []).map((src, i) => {
+													const currentSelectedIndex = selectedIndexes[rowIndex] ?? 0;
+													const isSelected = i === currentSelectedIndex;
+													
+													return (
+														<CarouselItem key={`${rowIndex}-${i}`} className="basis-full flex-shrink-0">
+															<div className="flex justify-center w-full">
+																<img 
+																	src={src} 
+																	className="h-auto"
+																	style={{ 
+																		width: Math.max(360, scaled(DIM.leftBottom.w * 0.75 - 10)),
+																		maxWidth: '600px'
+																	}} 
+																/>
+															</div>
+														</CarouselItem>
+													);
+												})}
+											</CarouselContent>
+										</Carousel>
+									</div>
 								</div>
 							))}
-							<div>
+							<div className="flex justify-center mt-4">
 								<button
 									onClick={handleSubmit}
-									className="mt-2 px-4 py-2 rounded bg-white text-black border border-[#215337] hover:bg-neutral-100"
+									disabled={!gameStarted}
+									className="px-6 py-3 rounded bg-green-600 text-black hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
 								>
 									Submit
 								</button>
@@ -156,6 +366,20 @@ export default function CayoFingerprint() {
 					</div>
 				</div>
 			)}
+			
+			{timeComparison && (
+				<TimeComparisonDisplay
+					comparison={timeComparison}
+					onClose={() => setTimeComparison(null)}
+				/>
+			)}
+
+			<ScanningPopup
+				isVisible={isScanning}
+				onComplete={handleScanComplete}
+				isCorrect={scanResult}
+			/>
+			</div>
 		</div>
 	);
 }
