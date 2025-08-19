@@ -18,8 +18,8 @@ export default function Navbar({ activeGame, onGameChange, onLeaderboardClick }:
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   const navItems = [
-    { id: 'casino' as Game, label: 'Casino Hack' },
-    { id: 'cayo' as Game, label: 'Cayo Perico Hack' },
+    { id: 'casino' as Game, label: '>>> CASINO_EXPLOIT.exe' },
+    { id: 'cayo' as Game, label: '>>> CAYO_BREACH.exe' },
   ];
 
   useEffect(() => {
@@ -50,8 +50,9 @@ export default function Navbar({ activeGame, onGameChange, onLeaderboardClick }:
   };
 
   return (
-    <nav className="w-full bg-gray-900 border-b border-gray-700">
-      <div className="max-w-7xl mx-auto px-4">
+    <nav className="w-full bg-black/90 border-b border-green-500/30 backdrop-blur-sm relative">
+      <div className="absolute inset-0 bg-gradient-to-r from-green-900/20 via-transparent to-green-900/20"></div>
+      <div className="max-w-7xl mx-auto px-4 relative z-10">
         <div className="flex items-center justify-between">
           {/* Desktop Navigation */}
           <div className="hidden md:flex space-x-1">
@@ -60,11 +61,11 @@ export default function Navbar({ activeGame, onGameChange, onLeaderboardClick }:
                 key={item.id}
                 onClick={() => handleGameChange(item.id)}
                 className={cn(
-                  'px-4 lg:px-6 py-4 text-sm font-medium transition-colors duration-200',
-                  'border-b-2 hover:text-white hover:bg-gray-800',
+                  'px-4 lg:px-6 py-4 text-sm font-mono font-medium transition-all duration-200',
+                  'border-b-2 hover:text-green-400 hover:bg-green-900/20 hover:shadow-lg hover:shadow-green-500/20',
                   activeGame === item.id
-                    ? 'text-white border-blue-500 bg-gray-800'
-                    : 'text-gray-300 border-transparent'
+                    ? 'text-green-400 border-green-500 bg-green-900/30 shadow-lg shadow-green-500/20'
+                    : 'text-green-300/70 border-transparent'
                 )}
               >
                 {item.label}
@@ -89,9 +90,9 @@ export default function Navbar({ activeGame, onGameChange, onLeaderboardClick }:
           <div className="hidden md:block relative" ref={dropdownRef}>
             <button
               onClick={() => setIsLeaderboardOpen(!isLeaderboardOpen)}
-              className="px-4 lg:px-6 py-4 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 transition-colors duration-200 flex items-center space-x-1"
+              className="px-4 lg:px-6 py-4 text-sm font-mono font-medium text-green-300/70 hover:text-green-400 hover:bg-green-900/20 transition-all duration-200 flex items-center space-x-1"
             >
-              <span>Leaderboard</span>
+              <span>ACCESS_LOGS.db</span>
               <svg
                 className={`w-4 h-4 transition-transform duration-200 ${
                   isLeaderboardOpen ? 'rotate-180' : ''
@@ -105,26 +106,26 @@ export default function Navbar({ activeGame, onGameChange, onLeaderboardClick }:
             </button>
 
             {isLeaderboardOpen && (
-              <div className="absolute right-0 mt-1 w-48 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-50">
+              <div className="absolute right-0 mt-1 w-56 bg-black/95 border border-green-500/30 rounded-md shadow-xl shadow-green-500/20 z-50 backdrop-blur-sm">
                 <div className="py-1">
                   <button
                     onClick={() => handleLeaderboardItemClick('casino')}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 transition-colors duration-200"
+                    className="block w-full text-left px-4 py-2 text-sm font-mono text-green-300/70 hover:text-green-400 hover:bg-green-900/20 transition-all duration-200"
                   >
-                    Casino Hack
+                    [CASINO] exploit_records.log
                   </button>
                   <button
                     onClick={() => handleLeaderboardItemClick('cayo')}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 transition-colors duration-200"
+                    className="block w-full text-left px-4 py-2 text-sm font-mono text-green-300/70 hover:text-green-400 hover:bg-green-900/20 transition-all duration-200"
                   >
-                    Cayo Perico Hack
+                    [CAYO] breach_records.log
                   </button>
-                  <div className="border-t border-gray-700 my-1"></div>
+                  <div className="border-t border-green-500/30 my-1"></div>
                   <button
                     onClick={() => handleLeaderboardItemClick()}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 transition-colors duration-200"
+                    className="block w-full text-left px-4 py-2 text-sm font-mono text-green-300/70 hover:text-green-400 hover:bg-green-900/20 transition-all duration-200"
                   >
-                    View All
+                    [ALL] access_database.db
                   </button>
                 </div>
               </div>

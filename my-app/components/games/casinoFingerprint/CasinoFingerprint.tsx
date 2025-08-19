@@ -1,9 +1,9 @@
 
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { submitTime, type User } from '@/lib/auth';
+import { type User } from '@/lib/auth';
 import { submitTime as submitLeaderboardTime } from '@/lib/leaderboard';
 import TimeComparisonDisplay from '@/components/ui/TimeComparison';
 import ScanningPopup from '@/components/ui/ScanningPopup';
@@ -79,7 +79,7 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
   const [targetSetId, setTargetSetId] = useState<number | null>(null);
   const [selectedTileIndexes, setSelectedTileIndexes] = useState<Set<number>>(new Set());
   const [currentRound, setCurrentRound] = useState(0);
-  const ROUNDS_TOTAL = 2;
+  const ROUNDS_TOTAL = 1;
   const MAX_SELECTIONS = 4;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resultMessage, setResultMessage] = useState<string | null>(null);
@@ -98,7 +98,7 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
       if (targetSetId !== null) {
         const correctIndices = new Set<number>();
         gridPieces.forEach((piece, index) => {
-          if (piece.setId === targetSetId && [1, 2, 3, 4].includes(piece.index)) {
+          if (piece.setId === targetSetId && CORRECT_PIECES.includes(piece.index)) {
             correctIndices.add(index);
           }
         });
@@ -123,11 +123,11 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
     const shuffledOrder = shuffle(fingerprintOrder);
     setFingerprintOrder(shuffledOrder);
     
-    const [a, b] = shuffle(AVAILABLE_SET_IDS).slice(0, 2);
-    const mixed = buildRoundGrid(a);
+    const targetSet = shuffle(AVAILABLE_SET_IDS)[0];
+    const mixed = buildRoundGrid(targetSet);
     setGridPieces(mixed);
-    setSelectedSetIds([a, b]);
-    setTargetSetId(a);
+    setSelectedSetIds([targetSet]);
+    setTargetSetId(targetSet);
     setSelectedTileIndexes(new Set());
     setCurrentRound(0);
     setResultMessage(null);
@@ -137,6 +137,34 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
     setTimeComparison(null);
     resetOracle();
   };
+
+  // Define what the correct pieces should be for each set
+  // In GTA casino heist, the correct pieces are typically 1,2,3,4 (the core fingerprint parts)
+  const CORRECT_PIECES = [1, 2, 3, 4];
+
+  // Create a stable validation function
+  const validateSelection = useCallback((tileIndexes: Set<number>, pieces: Piece[], target: number | null) => {
+    if (!target || tileIndexes.size !== 4) return false;
+    
+    const required = new Set(CORRECT_PIECES);
+    const selectedPieceIndices = new Set<number>();
+    
+    // Check that all selected pieces belong to the target set and are from the correct pieces
+    const allCorrect = Array.from(tileIndexes).every((tileIdx) => {
+      const piece = pieces[tileIdx];
+      if (!piece || piece.setId !== target || !required.has(piece.index)) {
+        return false;
+      }
+      selectedPieceIndices.add(piece.index);
+      return true;
+    });
+    
+    // Ensure we have exactly the required pieces (no duplicates, no missing)
+    const hasExactPieces = selectedPieceIndices.size === 4 && 
+      [...required].every(index => selectedPieceIndices.has(index));
+    
+    return allCorrect && hasExactPieces;
+  }, []);
 
   const handleFingerprintClick = (index: number) => {
     if (isLocked || isSubmitting) return;
@@ -153,28 +181,23 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
     setSelectedTileIndexes(next);
   };
 
-  const submitSelection = () => {
+  const submitSelection = useCallback(() => {
     if (isLocked || isSubmitting) return;
     if (selectedTileIndexes.size !== MAX_SELECTIONS) {
       setResultMessage('Select exactly 4 fingerprints.');
+      // Auto-clear the message after 3 seconds
+      setTimeout(() => setResultMessage(null), 3000);
       return;
     }
     setIsSubmitting(true);
     
-    // Evaluate: all selected must belong to targetSetId and be indices 1..4
-    const required = new Set([1,2,3,4]);
-    const allCorrect = Array.from(selectedTileIndexes).every((tileIdx) => {
-      const piece = gridPieces[tileIdx];
-      return piece && piece.setId === targetSetId && required.has(piece.index);
-    });
+    // Validate the selection
+    const isCorrectSelection = validateSelection(selectedTileIndexes, gridPieces, targetSetId);
 
-    // Check if this is the final round
-    const isFinalRound = currentRound >= ROUNDS_TOTAL - 1;
-    
-    // Start scanning animation
-    setScanResult(allCorrect && isFinalRound);
+    // Since there's only one round, always start scanning animation
+    setScanResult(isCorrectSelection);
     setIsScanning(true);
-  };
+  }, [isLocked, isSubmitting, selectedTileIndexes, validateSelection, gridPieces, targetSetId, currentRound]);
 
   const handleScanComplete = (isCorrect: boolean) => {
     setIsScanning(false);
@@ -195,6 +218,7 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
       setIsSubmitting(false);
       setCurrentRound(0);
       setGameStartTime(null);
+      setResultMessage(null);
     } else {
       // Incorrect - restart the entire game
       setIsLocked(true);
@@ -209,24 +233,7 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
     }
   };
 
-  // Handle round progression for intermediate rounds
-  useEffect(() => {
-    if (isSubmitting && !isScanning && currentRound < ROUNDS_TOTAL - 1) {
-      // This is not the final round, continue to next round
-      const [a, b] = selectedSetIds;
-      const nextRound = currentRound + 1;
-      const nextTarget = targetSetId === a ? b : a;
-      const nextGrid = buildRoundGrid(nextTarget!);
-      
-      setTimeout(() => {
-        setGridPieces(nextGrid);
-        setTargetSetId(nextTarget!);
-        setSelectedTileIndexes(new Set());
-        setCurrentRound(nextRound);
-        setIsSubmitting(false);
-      }, 1200);
-    }
-  }, [isSubmitting, isScanning, currentRound, selectedSetIds, targetSetId]);
+  // Removed round progression logic since we only have 1 round
 
   // Fallback content (before start) shows print1 tiles in a shuffled order
   const fallbackPieces: Piece[] = useMemo(
@@ -252,21 +259,44 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [submitSelection, isLocked, isSubmitting, selectedTileIndexes, gridPieces, targetSetId, currentRound, selectedSetIds]);
+  }, [submitSelection]);
 
   return (
-    <div className='flex items-center justify-center min-h-screen p-2 sm:p-4'>
-      <div className='relative bg-black text-white w-full max-w-[1280px] mx-auto' style={{ width: containerWidth, height: containerWidth * 9/16 }}>
+    <div className='flex flex-col items-center justify-center min-h-screen p-2 sm:p-4 gap-4'>
+      {/* Game status indicators - moved outside */}
+      {!isLocked && (
+        <div className="flex gap-4 mb-2 font-mono">
+          <div className="bg-green-900/30 border border-green-500/50 text-green-400 px-4 py-2 rounded-md text-lg font-medium shadow-lg shadow-green-500/20">
+            [SESSION] {currentRound + 1} / {ROUNDS_TOTAL}
+          </div>
+          <div className={cn(
+            "px-4 py-2 rounded-md text-lg font-medium border shadow-lg",
+            selectedTileIndexes.size === MAX_SELECTIONS 
+              ? "bg-green-900/30 border-green-500/50 text-green-400 shadow-green-500/20" 
+              : "bg-gray-900/30 border-gray-500/50 text-gray-400 shadow-gray-500/20"
+          )}>
+            [TARGET] {selectedTileIndexes.size} / {MAX_SELECTIONS}
+          </div>
+          {/* Oracle active indicator */}
+          {oracleActive && (
+            <div className="bg-red-900/30 border border-red-500/50 text-red-400 px-4 py-2 rounded-md text-lg font-medium shadow-lg shadow-red-500/20 animate-pulse">
+              [EXPLOIT] ACTIVE
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className='relative bg-black text-white w-full max-w-[1280px] mx-auto border-2 border-green-500/30 shadow-2xl shadow-green-500/20 rounded-lg overflow-hidden' style={{ width: containerWidth, height: containerWidth * 9/16 }}>
         <img
           className='ml-auto'
           src={'/casinoFingerprints/status_bar.png'}
           alt='status bar'
           style={{ width: '100%', height: scaled(DIMENSIONS.statusBar.h) }}
         />
-        <div className='absolute  w-fit h-fit flex flex-row flex-nowrap bg-black/50'>
-          <h3>Press</h3>
+        <div className='absolute w-fit h-fit flex flex-row flex-nowrap bg-black/80 border border-green-500/30 rounded px-3 py-1 font-mono text-green-400 text-sm'>
+          <span>[CTRL]</span>
           <img className='ml-1 mr-1 w-6 h-6' src={'/casinoFingerprints/tab_button.png'} alt='tab button' />
-          <h3>to check if the match is correct</h3>
+          <span>EXECUTE SCAN PROTOCOL</span>
         </div>
         {/* Constrain the inner game area to the scaled outer box width/height */}
         <div className="mx-auto" style={{ width: scaled(DIMENSIONS.outerBox.w), height: scaled(DIMENSIONS.outerBox.h) }}>
@@ -340,23 +370,35 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
         </div>
 
         {isLocked && (
-          <div className="absolute inset-0 z-20 bg-gray-900/70 backdrop-blur-[1px] flex items-center justify-center">
-            <button
-              onClick={startGame}
-              className="px-6 py-3 rounded-md bg-white text-black font-medium hover:bg-neutral-100 active:scale-[0.99] transition"
-            >
-              Start
-            </button>
+          <div className="absolute inset-0 z-20 bg-black/80 backdrop-blur-sm flex items-center justify-center">
+            <div className="text-center">
+              <div className="mb-4 text-green-400 font-mono text-lg animate-pulse">
+                [SYSTEM] AWAITING AUTHORIZATION
+              </div>
+              <button
+                onClick={startGame}
+                className="px-8 py-4 rounded-md bg-green-900/30 border border-green-500/50 text-green-400 font-mono font-medium hover:bg-green-800/40 hover:border-green-400 hover:shadow-lg hover:shadow-green-500/20 active:scale-[0.98] transition-all duration-200"
+              >
+                [INITIALIZE] START EXPLOIT
+              </button>
+            </div>
           </div>
         )}
       </div>
       {resultMessage && (
         <div className="pointer-events-none fixed inset-x-0 top-4 z-30 flex justify-center">
           <div className={cn(
-            'px-4 py-2 rounded-md text-sm font-medium',
-            resultMessage === 'Correct!' ? 'bg-green-500 text-black' : 'bg-red-500 text-white'
+            'px-6 py-3 rounded-md font-mono font-medium border shadow-lg',
+            resultMessage.includes('Correct') || resultMessage.includes('Success') 
+              ? 'bg-green-900/90 border-green-500/50 text-green-400 shadow-green-500/20' 
+              : 'bg-red-900/90 border-red-500/50 text-red-400 shadow-red-500/20'
           )}>
-            {resultMessage}
+            {resultMessage.includes('Select exactly') 
+              ? '[ERROR] INVALID TARGET COUNT - SELECT 4 NODES' 
+              : resultMessage.includes('Incorrect') 
+              ? '[FAILED] EXPLOIT DETECTED - SYSTEM RESET INITIATED'
+              : resultMessage
+            }
           </div>
         </div>
       )}

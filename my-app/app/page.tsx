@@ -69,8 +69,14 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+      <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-black via-green-950 to-black opacity-30"></div>
+        <div className="relative z-10 text-green-400 font-mono text-xl">
+          <div className="flex items-center space-x-2">
+            <div className="animate-spin w-4 h-4 border-2 border-green-400 border-t-transparent rounded-full"></div>
+            <span className="animate-pulse">INITIALIZING SYSTEM...</span>
+          </div>
+        </div>
       </div>
     );
   }
@@ -84,15 +90,37 @@ export default function Home() {
   }
 
   return (
-    <div className='bg-black min-h-screen'>
-      <UserDisplay user={user} onLogout={handleLogout} />
-      <Navbar 
-        activeGame={activeGame} 
-        onGameChange={setActiveGame}
-        onLeaderboardClick={handleLeaderboardClick}
-      />
-      <div className='flex items-center justify-center min-h-[calc(100vh-128px)]'>
-        {renderGame()}
+    <div className='bg-black min-h-screen relative overflow-hidden'>
+      {/* Matrix-style background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black via-green-950/10 to-black"></div>
+      <div className="absolute inset-0 opacity-5">
+        <div className="grid grid-cols-20 grid-rows-20 h-full w-full">
+          {Array.from({ length: 400 }).map((_, i) => (
+            <div 
+              key={i} 
+              className="border border-green-500/20 animate-pulse" 
+              style={{ animationDelay: `${i * 0.1}s`, animationDuration: '3s' }}
+            ></div>
+          ))}
+        </div>
+      </div>
+      
+      {/* Glitch overlay */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-green-400 to-transparent animate-pulse"></div>
+        <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-green-400 to-transparent animate-pulse" style={{ animationDelay: '1s' }}></div>
+      </div>
+      
+      <div className="relative z-10">
+        <UserDisplay user={user} onLogout={handleLogout} />
+        <Navbar 
+          activeGame={activeGame} 
+          onGameChange={setActiveGame}
+          onLeaderboardClick={handleLeaderboardClick}
+        />
+        <div className='flex items-center justify-center min-h-[calc(100vh-128px)]'>
+          {renderGame()}
+        </div>
       </div>
     </div>
   );

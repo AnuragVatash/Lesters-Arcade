@@ -242,16 +242,35 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
 	}, [gameStarted, isScanning]);
 
 	return (
-		<div className='flex items-center justify-center min-h-screen p-2 sm:p-4'>
-			<div className='border-2 border-[#215337] w-full max-w-[1280px] relative' style={{ width: containerWidth, height: containerHeight }}>
+		<div className='flex flex-col items-center justify-center min-h-screen p-2 sm:p-4 gap-4'>
+			{/* Game status indicators */}
+			{gameStarted && (
+				<div className="flex gap-4 mb-2 font-mono">
+					<div className="bg-blue-900/30 border border-blue-500/50 text-blue-400 px-4 py-2 rounded-md text-lg font-medium shadow-lg shadow-blue-500/20">
+						[BREACH] ACTIVE
+					</div>
+					{oracleActive && (
+						<div className="bg-red-900/30 border border-red-500/50 text-red-400 px-4 py-2 rounded-md text-lg font-medium shadow-lg shadow-red-500/20 animate-pulse">
+							[EXPLOIT] RUNNING
+						</div>
+					)}
+				</div>
+			)}
+
+			<div className='border-2 border-green-500/30 w-full max-w-[1280px] relative bg-black/50 shadow-2xl shadow-green-500/20' style={{ width: containerWidth, height: containerHeight }}>
 			{!gameStarted && (
-				<div className="absolute inset-0 z-20 bg-gray-900/70 backdrop-blur-[1px] flex items-center justify-center">
-					<button
-						onClick={startGame}
-						className="px-6 py-3 rounded-md bg-white text-black font-medium hover:bg-neutral-100 active:scale-[0.99] transition"
-					>
-						Start
-					</button>
+				<div className="absolute inset-0 z-20 bg-black/80 backdrop-blur-sm flex items-center justify-center">
+					<div className="text-center">
+						<div className="mb-4 text-blue-400 font-mono text-lg animate-pulse">
+							[SYSTEM] CAYO PERICO BREACH PROTOCOL
+						</div>
+						<button
+							onClick={startGame}
+							className="px-8 py-4 rounded-md bg-blue-900/30 border border-blue-500/50 text-blue-400 font-mono font-medium hover:bg-blue-800/40 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-500/20 active:scale-[0.98] transition-all duration-200"
+						>
+							[INITIALIZE] START BREACH
+						</button>
+					</div>
 				</div>
 			)}
 			<div className="w-full h-full p-4">
@@ -339,9 +358,9 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
 								<button
 									onClick={handleSubmit}
 									disabled={!gameStarted}
-									className="px-6 py-3 rounded bg-green-600 text-black hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+									className="px-8 py-3 rounded bg-blue-900/30 border border-blue-500/50 text-blue-400 font-mono hover:bg-blue-800/40 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-all duration-200"
 								>
-									Submit
+									[EXECUTE] BREACH
 								</button>
 							</div>
 						</div>
@@ -361,7 +380,12 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
 			</div>
 			{resultMessage && (
 				<div className="pointer-events-none absolute inset-x-0 top-2 z-30 flex justify-center">
-					<div className={`px-4 py-2 rounded-md text-sm font-medium ${resultMessage.startsWith('Correct') ? 'bg-green-500 text-black' : 'bg-red-500 text-white'}`}>
+					<div className={`px-6 py-3 rounded-md font-mono font-medium border shadow-lg ${
+						resultMessage.startsWith('Correct') 
+							? 'bg-green-900/90 border-green-500/50 text-green-400 shadow-green-500/20' 
+							: 'bg-red-900/90 border-red-500/50 text-red-400 shadow-red-500/20'
+					}`}>
+						{resultMessage.startsWith('Correct') ? '[SUCCESS] ' : '[FAILED] '}
 						{resultMessage}
 					</div>
 				</div>

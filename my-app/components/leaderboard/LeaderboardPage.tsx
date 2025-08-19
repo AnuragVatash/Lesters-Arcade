@@ -136,70 +136,93 @@ export default function LeaderboardPage({ onBack }: LeaderboardPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white p-4 sm:p-6">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-black text-white p-4 sm:p-6 relative overflow-hidden">
+      {/* Matrix background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-black via-green-950/20 to-black"></div>
+      <div className="absolute inset-0 opacity-5">
+        <div className="grid grid-cols-20 grid-rows-20 h-full w-full">
+          {Array.from({ length: 400 }).map((_, i) => (
+            <div 
+              key={i} 
+              className="border border-green-500/20 animate-pulse" 
+              style={{ animationDelay: `${i * 0.1}s`, animationDuration: '3s' }}
+            ></div>
+          ))}
+        </div>
+      </div>
+      
+      {/* Glitch overlay */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-green-400 to-transparent animate-pulse"></div>
+        <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-green-400 to-transparent animate-pulse" style={{ animationDelay: '1s' }}></div>
+      </div>
+      
+      <div className="max-w-6xl mx-auto relative z-10">
         {/* Header */}
         <div className="flex items-center justify-between mb-6 sm:mb-8">
           <button
             onClick={onBack}
-            className="text-gray-400 hover:text-white transition-colors duration-200 text-sm sm:text-base"
+            className="text-green-400 hover:text-green-300 transition-colors duration-200 text-sm sm:text-base font-mono border border-green-500/30 px-3 py-1 rounded bg-green-900/20 hover:bg-green-800/30"
           >
-            ← Back to Games
+            [EXIT] ← MAIN_TERMINAL
           </button>
-          <h1 className="text-2xl sm:text-3xl font-bold">Leaderboard</h1>
+          <div className="text-center">
+            <h1 className="text-2xl sm:text-3xl font-bold text-green-400 font-mono">[ACCESS_LOGS]</h1>
+            <div className="text-xs text-green-500/70 font-mono mt-1">database@ghost-net.db</div>
+          </div>
           <div className="w-16 sm:w-20"></div> {/* Spacer for centering */}
         </div>
 
         {/* Game Type Selector */}
         <div className="mb-6">
-          <div className="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-1 bg-gray-800 rounded-lg p-1 w-fit mx-auto">
+          <div className="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-1 bg-black/90 border border-green-500/30 rounded-lg p-1 w-fit mx-auto backdrop-blur-sm">
             <button
               onClick={() => handleGameChange('casino')}
-              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-md font-medium transition-colors duration-200 text-sm sm:text-base ${
+              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-md font-mono font-medium transition-all duration-200 text-sm sm:text-base border ${
                 selectedGame === 'casino'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-400 hover:text-white'
+                  ? 'bg-green-900/30 border-green-500/50 text-green-400 shadow-lg shadow-green-500/20'
+                  : 'border-transparent text-green-300/70 hover:text-green-400 hover:bg-green-900/20'
               }`}
             >
-              Casino Hack
+              [CASINO] exploit.log
             </button>
             <button
               onClick={() => handleGameChange('cayo')}
-              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-md font-medium transition-colors duration-200 text-sm sm:text-base ${
+              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-md font-mono font-medium transition-all duration-200 text-sm sm:text-base border ${
                 selectedGame === 'cayo'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-400 hover:text-white'
+                  ? 'bg-green-900/30 border-green-500/50 text-green-400 shadow-lg shadow-green-500/20'
+                  : 'border-transparent text-green-300/70 hover:text-green-400 hover:bg-green-900/20'
               }`}
             >
-              Cayo Perico Hack
+              [CAYO] breach.log
             </button>
           </div>
         </div>
 
         {/* Stats */}
         <div className="text-center mb-6">
-          <p className="text-gray-400 text-sm sm:text-base">
-            Showing {leaderboardData.entries.length} of {leaderboardData.totalEntries} records
+          <p className="text-green-400/70 text-sm sm:text-base font-mono">
+            [DATABASE] {leaderboardData.entries.length} / {leaderboardData.totalEntries} records loaded
           </p>
         </div>
 
         {/* Leaderboard Table */}
-        <div className="bg-gray-900 rounded-lg overflow-hidden">
+        <div className="bg-black/90 border border-green-500/30 rounded-lg overflow-hidden shadow-2xl shadow-green-500/20 backdrop-blur-sm">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-gray-800 border-b border-gray-700">
-                  <th className="text-left py-3 sm:py-4 px-3 sm:px-6 font-medium text-gray-300 text-sm sm:text-base">Rank</th>
-                  <th className="text-left py-3 sm:py-4 px-3 sm:px-6 font-medium text-gray-300 text-sm sm:text-base">Username</th>
-                  <th className="text-left py-3 sm:py-4 px-3 sm:px-6 font-medium text-gray-300 text-sm sm:text-base">Time</th>
-                  <th className="text-left py-3 sm:py-4 px-3 sm:px-6 font-medium text-gray-300 text-sm sm:text-base hidden sm:table-cell">Date</th>
+                <tr className="bg-green-900/20 border-b border-green-500/30">
+                  <th className="text-left py-3 sm:py-4 px-3 sm:px-6 font-mono font-medium text-green-400 text-sm sm:text-base">[RANK]</th>
+                  <th className="text-left py-3 sm:py-4 px-3 sm:px-6 font-mono font-medium text-green-400 text-sm sm:text-base">[USER_ID]</th>
+                  <th className="text-left py-3 sm:py-4 px-3 sm:px-6 font-mono font-medium text-green-400 text-sm sm:text-base">[EXEC_TIME]</th>
+                  <th className="text-left py-3 sm:py-4 px-3 sm:px-6 font-mono font-medium text-green-400 text-sm sm:text-base hidden sm:table-cell">[TIMESTAMP]</th>
                 </tr>
               </thead>
               <tbody>
                 {leaderboardData.entries.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="text-center py-8 sm:py-12 text-gray-400 text-sm sm:text-base">
-                      No records found for {selectedGame === 'casino' ? 'Casino Hack' : 'Cayo Perico Hack'}
+                    <td colSpan={4} className="text-center py-8 sm:py-12 text-red-400/70 text-sm sm:text-base font-mono">
+                      [ERROR] No records found for {selectedGame === 'casino' ? 'CASINO_EXPLOIT' : 'CAYO_BREACH'} database
                     </td>
                   </tr>
                 ) : (
@@ -211,10 +234,10 @@ export default function LeaderboardPage({ onBack }: LeaderboardPageProps) {
                     return (
                       <tr
                         key={`${entry.username}-${entry.completedAt}`}
-                        className={`border-b border-gray-800 transition-colors duration-200 ${
+                        className={`border-b border-green-500/20 transition-colors duration-200 ${
                           isCurrentUser 
-                            ? 'bg-blue-900/30 border-blue-500 hover:bg-blue-900/50' 
-                            : 'hover:bg-gray-800/50'
+                            ? 'bg-green-900/30 border-green-500/50 hover:bg-green-900/50' 
+                            : 'hover:bg-green-900/10'
                         }`}
                       >
                         <td className="py-3 sm:py-4 px-3 sm:px-6">
@@ -226,16 +249,16 @@ export default function LeaderboardPage({ onBack }: LeaderboardPageProps) {
                                 {rank === 3 && '🥉'}
                               </span>
                             )}
-                            <span className="font-medium text-sm sm:text-base">{rank}</span>
+                            <span className="font-mono font-medium text-sm sm:text-base text-green-300">{rank}</span>
                           </div>
                         </td>
-                        <td className={`py-3 sm:py-4 px-3 sm:px-6 font-medium text-sm sm:text-base truncate max-w-[120px] sm:max-w-none ${
-                          isCurrentUser ? 'text-blue-300 font-bold' : ''
+                        <td className={`py-3 sm:py-4 px-3 sm:px-6 font-mono font-medium text-sm sm:text-base truncate max-w-[120px] sm:max-w-none ${
+                          isCurrentUser ? 'text-green-300 font-bold' : 'text-green-400/80'
                         }`}>
                           {entry.username}
                         </td>
-                        <td className="py-3 sm:py-4 px-3 sm:px-6 font-mono text-sm sm:text-lg">{formatTime(entry.time)}</td>
-                        <td className="py-3 sm:py-4 px-3 sm:px-6 text-gray-400 text-sm hidden sm:table-cell">{date}</td>
+                        <td className="py-3 sm:py-4 px-3 sm:px-6 font-mono text-sm sm:text-lg text-green-300">{formatTime(entry.time)}</td>
+                        <td className="py-3 sm:py-4 px-3 sm:px-6 text-green-400/60 font-mono text-sm hidden sm:table-cell">{date}</td>
                       </tr>
                     );
                   })
