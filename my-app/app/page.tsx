@@ -18,7 +18,7 @@ export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [activeGame, setActiveGame] = useState<Game>('cayo');
   const [currentPage, setCurrentPage] = useState<Page>('games');
-  const [selectedLeaderboardGame, setSelectedLeaderboardGame] = useState<GameType>('casino');
+
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -44,10 +44,7 @@ export default function Home() {
     setCurrentPage('games');
   };
 
-  const handleLeaderboardClick = (gameType?: GameType) => {
-    if (gameType) {
-      setSelectedLeaderboardGame(gameType);
-    }
+  const handleLeaderboardClick = (_gameType?: GameType) => {
     setCurrentPage('leaderboard');
   };
 

@@ -9,10 +9,15 @@ import {
 } from "@/components/ui/carousel"
 
 import { useEffect, useRef, useState } from 'react';
-import { submitTime as submitLeaderboardTime, type User } from '@/lib/leaderboard';
+import { submitTime as submitLeaderboardTime } from '@/lib/leaderboard';
 import TimeComparisonDisplay from '@/components/ui/TimeComparison';
 import ScanningPopup from '@/components/ui/ScanningPopup';
 import { useOracle } from '@/hooks/useOracle';
+
+interface User {
+    username: string;
+    isGuest: boolean;
+}
 
 interface CayoFingerprintProps {
 	user: User;
@@ -77,7 +82,7 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
 	const initializedRef = useRef<boolean[]>(Array(8).fill(false));
 	const apiRefs = useRef<(CarouselApi | null)[]>(Array(8).fill(null));
 	const [gameStartTime, setGameStartTime] = useState<number | null>(null);
-	const [timeComparison, setTimeComparison] = useState<any>(null);
+	const [timeComparison, setTimeComparison] = useState<{ oldTime: number | null; newTime: number; improvement: number | null; isFirstRecord: boolean } | null>(null);
 	const [gameStarted, setGameStarted] = useState(false);
 	const [focusedRow, setFocusedRow] = useState<number>(0);
 	const [isScanning, setIsScanning] = useState(false);
@@ -96,7 +101,7 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
 					const api = apiRefs.current[rowIdx];
 					const imgs = randomRowImages[rowIdx] || [];
 					const expected = `fp${rowIdx + 1}.png`;
-					const shouldBeSelected = correctPieces.includes(rowIdx + 1);
+					const shouldBeSelected = correctPieces.includes((rowIdx + 1) as 1 | 2 | 3 | 4);
 					
 					if (shouldBeSelected) {
 						// Find the index of the correct answer and navigate to it
@@ -151,7 +156,7 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
 			return Array.from({ length: 8 }, (_, rowIndex) => {
 				const correctAnswer = `fp${rowIndex + 1}.png`;
 				// Get the correct answer image
-				const correctImage = printSetBaseImages.find(img => img.endsWith(correctAnswer));
+				const correctImage = printSetBaseImages.find(img => img.endsWith(correctAnswer)) || printSetBaseImages[rowIndex];
 				// Get other images in order (not randomized)
 				const otherImages = printSetBaseImages.filter(img => !img.endsWith(correctAnswer));
 				
@@ -229,7 +234,7 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
 			const currentSrc = imgs[currentIdx];
 			
 			// Check if this row's piece (rowIdx + 1) should be selected based on the current print set
-			const shouldBeSelected = correctPieces.includes(rowIdx + 1);
+			const shouldBeSelected = correctPieces.includes((rowIdx + 1) as 1 | 2 | 3 | 4);
 			const isSelected = typeof currentSrc === 'string' && currentSrc.endsWith(expected);
 			
 			// Row is correct if: (should be selected AND is selected) OR (should NOT be selected AND is NOT selected)

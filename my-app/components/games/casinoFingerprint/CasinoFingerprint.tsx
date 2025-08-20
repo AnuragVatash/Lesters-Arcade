@@ -85,7 +85,7 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
   const [resultMessage, setResultMessage] = useState<string | null>(null);
   const [fallbackTargetSetId, setFallbackTargetSetId] = useState<number | null>(null);
   const [gameStartTime, setGameStartTime] = useState<number | null>(null);
-  const [timeComparison, setTimeComparison] = useState<any>(null);
+  const [timeComparison, setTimeComparison] = useState<{ oldTime: number | null; newTime: number; improvement: number | null; isFirstRecord: boolean } | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<boolean>(false);
 
@@ -99,7 +99,7 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
         const correctPieces = getCorrectPieces(targetSetId);
         const correctIndices = new Set<number>();
         gridPieces.forEach((piece, index) => {
-          if (piece.setId === targetSetId && correctPieces.includes(piece.index)) {
+          if (piece.setId === targetSetId && correctPieces.includes(piece.index as 1 | 2 | 3 | 4)) {
             correctIndices.add(index);
           }
         });

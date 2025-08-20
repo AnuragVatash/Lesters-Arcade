@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 // Removed ScanningPopup - using simple alert instead
 import TimeComparisonDisplay from '@/components/ui/TimeComparison'; // Assuming path
 import { submitTime as submitLeaderboardTime } from '@/lib/leaderboard'; // Assuming path
@@ -32,7 +32,7 @@ export default function NumberFinder({ user }: NumberFinderProps) {
     const [hoveredCol, setHoveredCol] = useState(0);
 
     const [gameStartTime, setGameStartTime] = useState<number | null>(null);
-    const [timeComparison, setTimeComparison] = useState<any>(null);
+    const [timeComparison, setTimeComparison] = useState<{ oldTime: number | null; newTime: number; improvement: number | null; isFirstRecord: boolean } | null>(null);
     const [showAlert, setShowAlert] = useState<boolean>(false);
     const [alertMessage, setAlertMessage] = useState<string>('');
     const [alertType, setAlertType] = useState<'success' | 'error'>('success');
@@ -273,7 +273,7 @@ export default function NumberFinder({ user }: NumberFinderProps) {
         }
     }
 
-    const handleSubmit = () => {
+    const handleSubmit = useCallback(() => {
         if (!gameStarted) return;
 
         const isCorrect = (hoveredRow === rowIndex && hoveredCol === colIndex);
@@ -319,7 +319,7 @@ export default function NumberFinder({ user }: NumberFinderProps) {
                 setShowAlert(false);
             }, 1500);
         }
-    };
+    }, [gameStarted, hoveredRow, hoveredCol, rowIndex, colIndex, gameStartTime, user, resetOracle]);
 
     // Enter key support for submit
     useEffect(() => {
@@ -396,24 +396,23 @@ export default function NumberFinder({ user }: NumberFinderProps) {
                             {displayedNumbers.join('.')}
                         </h2>
                         <div className="mt-20 grid grid-cols-10 max-w-2xl mx-auto">
-                            {gameBoard.map((row, rowIdx) => 
-                                row.map((number, colIdx) => {
-                                    const isHovered = rowIdx === hoveredRow && colIdx === hoveredCol;
-                                    const isHighlighted = highlightedCells.has(`${rowIdx}-${colIdx}`);
-                                    
-                                    return (
-                                        <div
-                                            key={`${rowIdx}-${colIdx}`}
-                                            className={`
-                                                w-12 h-8 flex items-center justify-center text-3xl font-light
-                                                ${isHighlighted ? 'text-red-600' : 'text-white'}
-                                            `}
-                                        >
-                                            {number}
-                                        </div>
-                                    );
-                                })
-                            )}
+                                                    {gameBoard.map((row, rowIdx) => 
+                            row.map((number, colIdx) => {
+                                const isHighlighted = highlightedCells.has(`${rowIdx}-${colIdx}`);
+                                
+                                return (
+                                    <div
+                                        key={`${rowIdx}-${colIdx}`}
+                                        className={`
+                                            w-12 h-8 flex items-center justify-center text-3xl font-light
+                                            ${isHighlighted ? 'text-red-600' : 'text-white'}
+                                        `}
+                                    >
+                                        {number}
+                                    </div>
+                                );
+                            })
+                        )}
                         </div>
                     </>
                 )}
