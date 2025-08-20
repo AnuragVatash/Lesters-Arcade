@@ -19,13 +19,25 @@ interface CayoFingerprintProps {
 }
 
 export default function CayoFingerprint({ user }: CayoFingerprintProps) {
-	const baseImages = Array.from({ length: 8 }, (_, i) => `/cayoFingerprints/print1/fp${i + 1}.png`);
+	// Print set configuration
+	const PRINT_SETS = [
+		{ dir: 'print1', correctPieces: [1, 2, 3, 4] }, // First 4 pieces are correct for print1
+		// { dir: 'print2', correctPieces: [5, 6, 7, 8] }, // Last 4 pieces would be correct for print2 (when available)
+	] as const;
+
+	const AVAILABLE_PRINT_SETS = [0]; // Only print1 available for now, add 1 when print2 is ready
+
+	// Current print set state
+	const [currentPrintSet, setCurrentPrintSet] = useState<number>(0);
+	
 	const rows = Array.from({ length: 8 });
 
-	// Real asset paths
-	const CONNECTION_TIMEOUT_IMG = '/cayoFingerprints/print1/connection_timeout.png';
-	const CLONE_TARGET_IMG = '/cayoFingerprints/print1/clone_target.png';
-	const DECIPHERED_IMG = '/cayoFingerprints/print1/decyphered.png';
+	// Dynamic asset paths based on current print set
+	const getAssetPath = (filename: string) => `/cayoFingerprints/${PRINT_SETS[currentPrintSet].dir}/${filename}`;
+	const baseImages = Array.from({ length: 8 }, (_, i) => getAssetPath(`fp${i + 1}.png`));
+	const CONNECTION_TIMEOUT_IMG = getAssetPath('connection_timeout.png');
+	const CLONE_TARGET_IMG = getAssetPath('clone_target.png');
+	const DECIPHERED_IMG = getAssetPath('decyphered.png');
 
 	// Responsive scale system
 	const [containerWidth, setContainerWidth] = useState(1280);
@@ -76,20 +88,34 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
 		gameStarted,
 		isScanning,
 		onOracleActivated: () => {
-			// Auto-navigate all carousels to correct answers
+			// Auto-navigate all carousels to correct answers based on current print set
 			setTimeout(() => {
+				const correctPieces = PRINT_SETS[currentPrintSet].correctPieces;
+				
 				for (let rowIdx = 0; rowIdx < 8; rowIdx++) {
 					const api = apiRefs.current[rowIdx];
 					const imgs = randomRowImages[rowIdx] || [];
 					const expected = `fp${rowIdx + 1}.png`;
+					const shouldBeSelected = correctPieces.includes(rowIdx + 1);
 					
-					// Find the index of the correct answer
-					const correctIndex = imgs.findIndex(src => 
-						typeof src === 'string' && src.endsWith(expected)
-					);
-					
-					if (api && correctIndex !== -1) {
-						api.scrollTo(correctIndex);
+					if (shouldBeSelected) {
+						// Find the index of the correct answer and navigate to it
+						const correctIndex = imgs.findIndex(src => 
+							typeof src === 'string' && src.endsWith(expected)
+						);
+						
+						if (api && correctIndex !== -1) {
+							api.scrollTo(correctIndex);
+						}
+					} else {
+						// Find any index that is NOT the expected answer and navigate to it
+						const wrongIndex = imgs.findIndex(src => 
+							typeof src === 'string' && !src.endsWith(expected)
+						);
+						
+						if (api && wrongIndex !== -1) {
+							api.scrollTo(wrongIndex);
+						}
 					}
 				}
 			}, 100);
@@ -108,17 +134,26 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
 	// Remove automatic initialization - this will happen when Start is clicked
 
 	const startGame = () => {
+		// Randomly select a print set
+		const selectedPrintSet = shuffle(AVAILABLE_PRINT_SETS)[0];
+		setCurrentPrintSet(selectedPrintSet);
+		
 		// Generate random images when starting the game
 		const generateRandomImages = () => {
 			// Randomly select 3 rows out of 8 to start with correct answer visible
 			const easyRows = shuffle(Array.from({ length: 8 }, (_, i) => i)).slice(0, 3);
 			
+			// Get the updated base images for the selected print set
+			const printSetBaseImages = Array.from({ length: 8 }, (_, i) => 
+				`/cayoFingerprints/${PRINT_SETS[selectedPrintSet].dir}/fp${i + 1}.png`
+			);
+			
 			return Array.from({ length: 8 }, (_, rowIndex) => {
 				const correctAnswer = `fp${rowIndex + 1}.png`;
 				// Get the correct answer image
-				const correctImage = baseImages.find(img => img.endsWith(correctAnswer));
+				const correctImage = printSetBaseImages.find(img => img.endsWith(correctAnswer));
 				// Get other images in order (not randomized)
-				const otherImages = baseImages.filter(img => !img.endsWith(correctAnswer));
+				const otherImages = printSetBaseImages.filter(img => !img.endsWith(correctAnswer));
 				
 				// Create array with correct answer and other images in order
 				const imagesForRow = [correctImage, ...otherImages];
@@ -184,13 +219,22 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
 		if (!gameStarted) return;
 		
 		const incorrectRows: number[] = [];
+		const correctPieces = PRINT_SETS[currentPrintSet].correctPieces;
+		
 		for (let rowIdx = 0; rowIdx < 8; rowIdx++) {
 			const api = apiRefs.current[rowIdx];
 			const currentIdx = api ? api.selectedScrollSnap() : (selectedIndexes[rowIdx] ?? 0);
 			const imgs = randomRowImages[rowIdx] || [];
 			const expected = `fp${rowIdx + 1}.png`;
 			const currentSrc = imgs[currentIdx];
-			const ok = typeof currentSrc === 'string' && currentSrc.endsWith(expected);
+			
+			// Check if this row's piece (rowIdx + 1) should be selected based on the current print set
+			const shouldBeSelected = correctPieces.includes(rowIdx + 1);
+			const isSelected = typeof currentSrc === 'string' && currentSrc.endsWith(expected);
+			
+			// Row is correct if: (should be selected AND is selected) OR (should NOT be selected AND is NOT selected)
+			const ok = shouldBeSelected ? isSelected : !isSelected;
+
 			if (!ok) incorrectRows.push(rowIdx + 1);
 		}
 		const allCorrect = incorrectRows.length === 0;

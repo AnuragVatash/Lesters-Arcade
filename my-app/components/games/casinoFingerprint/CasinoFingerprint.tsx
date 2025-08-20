@@ -15,11 +15,11 @@ type Piece = {
 };
 
 const PRINT_SETS = [
-  { dir: 'print1', ext: 'png' },
-  { dir: 'print2', ext: 'png' },
+  { dir: 'print1', ext: 'png', correctPieces: [1, 2, 3, 4] },
+  { dir: 'print2', ext: 'png', correctPieces: [1, 2, 3, 4] },
   // Add when ready:
-  // { dir: 'print3', ext: 'png' },
-  // { dir: 'print4', ext: 'png' },
+  // { dir: 'print3', ext: 'png', correctPieces: [1, 2, 3, 4] },
+  // { dir: 'print4', ext: 'png', correctPieces: [1, 2, 3, 4] },
 ] as const;
 
 // Currently only print1 and print2 have pieces
@@ -94,11 +94,12 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
     gameStarted: !isLocked,
     isScanning,
     onOracleActivated: () => {
-      // Auto-select the correct 4 pieces (indices 1-4 of target set)
+      // Auto-select the correct pieces based on the target set
       if (targetSetId !== null) {
+        const correctPieces = getCorrectPieces(targetSetId);
         const correctIndices = new Set<number>();
         gridPieces.forEach((piece, index) => {
-          if (piece.setId === targetSetId && CORRECT_PIECES.includes(piece.index)) {
+          if (piece.setId === targetSetId && correctPieces.includes(piece.index)) {
             correctIndices.add(index);
           }
         });
@@ -138,21 +139,36 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
     resetOracle();
   };
 
-  // Define what the correct pieces should be for each set
-  // In GTA casino heist, the correct pieces are typically 1,2,3,4 (the core fingerprint parts)
-  const CORRECT_PIECES = [1, 2, 3, 4];
+  // Get the correct pieces for the current target set
+  const getCorrectPieces = (setId: number | null) => {
+    if (setId === null) return [1, 2, 3, 4]; // fallback
+    return PRINT_SETS[setId]?.correctPieces || [1, 2, 3, 4];
+  };
 
   // Create a stable validation function
   const validateSelection = useCallback((tileIndexes: Set<number>, pieces: Piece[], target: number | null) => {
-    if (!target || tileIndexes.size !== 4) return false;
+    if (target === null || target === undefined || tileIndexes.size !== 4) {
+      console.log('Validation failed: target or size check', { target, size: tileIndexes.size });
+      return false;
+    }
     
-    const required = new Set(CORRECT_PIECES);
+    const required = new Set(getCorrectPieces(target));
     const selectedPieceIndices = new Set<number>();
+    
+    console.log('Validation debug:', { 
+      target, 
+      required: Array.from(required), 
+      selectedTileIndexes: Array.from(tileIndexes),
+      pieces: pieces.map((p, i) => ({ index: i, setId: p.setId, pieceIndex: p.index }))
+    });
     
     // Check that all selected pieces belong to the target set and are from the correct pieces
     const allCorrect = Array.from(tileIndexes).every((tileIdx) => {
       const piece = pieces[tileIdx];
+      console.log('Checking piece:', { tileIdx, piece, target, requiredHasPiece: required.has(piece?.index) });
+      
       if (!piece || piece.setId !== target || !required.has(piece.index)) {
+        console.log('Piece failed validation:', { piece, target, required: Array.from(required) });
         return false;
       }
       selectedPieceIndices.add(piece.index);
@@ -163,8 +179,15 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
     const hasExactPieces = selectedPieceIndices.size === 4 && 
       [...required].every(index => selectedPieceIndices.has(index));
     
+    console.log('Validation result:', { 
+      allCorrect, 
+      hasExactPieces, 
+      selectedPieceIndices: Array.from(selectedPieceIndices),
+      final: allCorrect && hasExactPieces 
+    });
+    
     return allCorrect && hasExactPieces;
-  }, []);
+  }, [targetSetId]); // Add targetSetId as dependency since getCorrectPieces uses it
 
   const handleFingerprintClick = (index: number) => {
     if (isLocked || isSubmitting) return;

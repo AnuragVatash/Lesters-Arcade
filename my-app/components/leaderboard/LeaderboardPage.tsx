@@ -196,6 +196,16 @@ export default function LeaderboardPage({ onBack }: LeaderboardPageProps) {
             >
               [CAYO] breach.log
             </button>
+            <button
+              onClick={() => handleGameChange('numberFinder')}
+              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-md font-mono font-medium transition-all duration-200 text-sm sm:text-base border ${
+                selectedGame === 'numberFinder'
+                  ? 'bg-green-900/30 border-green-500/50 text-green-400 shadow-lg shadow-green-500/20'
+                  : 'border-transparent text-green-300/70 hover:text-green-400 hover:bg-green-900/20'
+              }`}
+            >
+              [NUMBERFINDER] trace.log
+            </button>
           </div>
         </div>
 
@@ -222,7 +232,11 @@ export default function LeaderboardPage({ onBack }: LeaderboardPageProps) {
                 {leaderboardData.entries.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="text-center py-8 sm:py-12 text-red-400/70 text-sm sm:text-base font-mono">
-                      [ERROR] No records found for {selectedGame === 'casino' ? 'CASINO_EXPLOIT' : 'CAYO_BREACH'} database
+                      [ERROR] No records found for {
+                        selectedGame === 'casino' ? 'CASINO_EXPLOIT' : 
+                        selectedGame === 'cayo' ? 'CAYO_BREACH' : 
+                        'NUMBERFINDER_TRACE'
+                      } database
                     </td>
                   </tr>
                 ) : (

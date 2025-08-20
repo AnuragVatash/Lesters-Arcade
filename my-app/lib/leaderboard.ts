@@ -1,6 +1,6 @@
 'use client';
 
-export type GameType = 'casino' | 'cayo';
+export type GameType = 'casino' | 'cayo' | 'numberFinder';
 
 export interface LeaderboardEntry {
   username: string;
@@ -132,7 +132,7 @@ export function getLeaderboard(
 
 // Generate test data
 export function generateTestData(): void {
-  const gameTypes: GameType[] = ['casino', 'cayo'];
+  const gameTypes: GameType[] = ['casino', 'cayo', 'numberFinder'];
   const testUsernames = [
     'speedhacker', 'quickfingers', 'masterthief', 'hackergod', 'nightcrawler',
     'cyberpunk', 'digitalninja', 'codecracker', 'bytebuster', 'systembreaker',
@@ -154,7 +154,7 @@ export function generateTestData(): void {
       const attempts = Math.floor(Math.random() * 3) + 1;
       
       for (let i = 0; i < attempts; i++) {
-        const baseTime = gameType === 'casino' ? 15000 : 25000; // 15s for casino, 25s for cayo
+        const baseTime = gameType === 'casino' ? 15000 : gameType === 'cayo' ? 25000 : 12000; // 15s for casino, 25s for cayo, 12s for numberFinder
         const randomVariation = Math.random() * 30000; // 0-30s variation
         const time = Math.floor(baseTime + randomVariation);
         

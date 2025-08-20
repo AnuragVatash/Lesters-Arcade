@@ -6,9 +6,10 @@ interface UseOracleProps {
   gameStarted: boolean;
   onOracleActivated: () => void;
   isScanning?: boolean;
+  activationSequence?: string;
 }
 
-export function useOracle({ gameStarted, onOracleActivated, isScanning = false }: UseOracleProps) {
+export function useOracle({ gameStarted, onOracleActivated, isScanning = false, activationSequence = 'oracle' }: UseOracleProps) {
   const [oracleActive, setOracleActive] = useState(false);
   const [keySequence, setKeySequence] = useState('');
 
@@ -25,19 +26,31 @@ export function useOracle({ gameStarted, onOracleActivated, isScanning = false }
 
       // Handle oracle cheat code detection
       if (e.key.length === 1) {
-        const newSequence = (keySequence + e.key.toLowerCase()).slice(-6); // Keep last 6 characters
-        setKeySequence(newSequence);
+        // If activation sequence is a single character, trigger immediately
+        if (activationSequence.length === 1) {
+          if (e.key === activationSequence) {
+            console.log('Single key oracle activated:', e.key);
+            setOracleActive(true);
+            onOracleActivated();
+          }
+        } else {
+          // For multi-character sequences, use the old logic
+          const maxLength = Math.max(6, activationSequence.length);
+          const newSequence = (keySequence + e.key.toLowerCase()).slice(-maxLength);
+          setKeySequence(newSequence);
 
-        if (newSequence === 'oracle') {
-          setOracleActive(true);
-          onOracleActivated();
+          if (newSequence === activationSequence.toLowerCase()) {
+            console.log('Multi-key oracle activated:', newSequence);
+            setOracleActive(true);
+            onOracleActivated();
+          }
         }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameStarted, isScanning, keySequence, onOracleActivated]);
+  }, [gameStarted, isScanning, keySequence, onOracleActivated, activationSequence]);
 
   return {
     oracleActive,

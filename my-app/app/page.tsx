@@ -64,7 +64,7 @@ export default function Home() {
       case 'cayo':
         return <CayoFingerprint user={user} />;
       case 'number':
-        return <NumberFinder />;
+        return <NumberFinder user={user} />;
       default:
         return <CayoFingerprint user={user} />;
     }

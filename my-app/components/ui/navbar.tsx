@@ -2,14 +2,29 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { type GameType } from '@/lib/leaderboard';
 
 type Game = 'casino' | 'cayo' | 'number';
 
 interface NavbarProps {
   activeGame: Game;
   onGameChange: (game: Game) => void;
-  onLeaderboardClick: (gameType?: Game) => void;
+  onLeaderboardClick: (gameType?: GameType) => void;
 }
+
+// Helper function to map Game type to GameType
+const mapGameToGameType = (game: Game): GameType => {
+  switch (game) {
+    case 'casino':
+      return 'casino';
+    case 'cayo':
+      return 'cayo';
+    case 'number':
+      return 'numberFinder';
+    default:
+      return 'casino';
+  }
+};
 
 export default function Navbar({ activeGame, onGameChange, onLeaderboardClick }: NavbarProps) {
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
@@ -42,7 +57,7 @@ export default function Navbar({ activeGame, onGameChange, onLeaderboardClick }:
   const handleLeaderboardItemClick = (gameType?: Game) => {
     setIsLeaderboardOpen(false);
     setIsMobileMenuOpen(false);
-    onLeaderboardClick(gameType);
+    onLeaderboardClick(gameType ? mapGameToGameType(gameType) : undefined);
   };
 
   const handleGameChange = (game: Game) => {
@@ -121,6 +136,12 @@ export default function Navbar({ activeGame, onGameChange, onLeaderboardClick }:
                   >
                     [CAYO] breach_records.log
                   </button>
+                  <button
+                    onClick={() => handleLeaderboardItemClick('number')}
+                    className="block w-full text-left px-4 py-2 text-sm font-mono text-green-300/70 hover:text-green-400 hover:bg-green-900/20 transition-all duration-200"
+                  >
+                    [NUMBERFINDER] trace_records.log
+                  </button>
                   <div className="border-t border-green-500/30 my-1"></div>
                   <button
                     onClick={() => handleLeaderboardItemClick()}
@@ -166,6 +187,12 @@ export default function Navbar({ activeGame, onGameChange, onLeaderboardClick }:
                   className="block w-full text-left px-2 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800 rounded transition-colors duration-200"
                 >
                   Cayo Perico Hack
+                </button>
+                <button
+                  onClick={() => handleLeaderboardItemClick('number')}
+                  className="block w-full text-left px-2 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800 rounded transition-colors duration-200"
+                >
+                  Number Finder
                 </button>
                 <button
                   onClick={() => handleLeaderboardItemClick()}
