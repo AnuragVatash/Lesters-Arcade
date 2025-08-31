@@ -42,7 +42,7 @@ export default function AuthPage({ onAuthenticated }: AuthPageProps) {
           onAuthenticated(result.user);
         }
       }
-    } catch (_error) {
+    } catch {
       setMessage('An error occurred. Please try again.');
     } finally {
       setIsLoading(false);

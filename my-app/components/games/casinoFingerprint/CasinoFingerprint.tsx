@@ -68,7 +68,7 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
   // Each fingerprint piece is 126x126 at 1920 width; scale to our 1280 width
   const TILE_SIZE = scaled(126); // 84px when SCALE = 2/3
   // Reduce grid gap to 25% of prior spacing so tiles fit comfortably
-  const GRID_GAP = 0; // vertical gap handled by per-tile marginBottom
+  // const GRID_GAP = 0; // vertical gap handled by per-tile marginBottom - commented out as unused
   const GRID_COLUMN_GAP = 12; // explicit 12px horizontal gap between columns
 
   const [isLocked, setIsLocked] = useState(true);
@@ -187,7 +187,7 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
     });
     
     return allCorrect && hasExactPieces;
-  }, [targetSetId]); // Add targetSetId as dependency since getCorrectPieces uses it
+  }, []); // Remove targetSetId dependency as it's not actually used in the function
 
   const handleFingerprintClick = (index: number) => {
     if (isLocked || isSubmitting) return;
@@ -220,7 +220,7 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
     // Since there's only one round, always start scanning animation
     setScanResult(isCorrectSelection);
     setIsScanning(true);
-  }, [isLocked, isSubmitting, selectedTileIndexes, validateSelection, gridPieces, targetSetId, currentRound]);
+  }, [isLocked, isSubmitting, selectedTileIndexes, validateSelection, gridPieces, targetSetId]); // Remove currentRound as it's not used in the function
 
   const handleScanComplete = (isCorrect: boolean) => {
     setIsScanning(false);
