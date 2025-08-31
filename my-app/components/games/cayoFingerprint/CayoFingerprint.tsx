@@ -3,8 +3,6 @@ import {
 	Carousel,
 	CarouselContent,
 	CarouselItem,
-	CarouselNext,
-	CarouselPrevious,
 	type CarouselApi,
 } from "@/components/ui/carousel"
 
@@ -39,7 +37,7 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
 
 	// Dynamic asset paths based on current print set
 	const getAssetPath = (filename: string) => `/cayoFingerprints/${PRINT_SETS[currentPrintSet].dir}/${filename}`;
-	const baseImages = Array.from({ length: 8 }, (_, i) => getAssetPath(`fp${i + 1}.png`));
+	// const baseImages = Array.from({ length: 8 }, (_, i) => getAssetPath(`fp${i + 1}.png`)); // Commented out as unused
 	const CONNECTION_TIMEOUT_IMG = getAssetPath('connection_timeout.png');
 	const CLONE_TARGET_IMG = getAssetPath('clone_target.png');
 	const DECIPHERED_IMG = getAssetPath('decyphered.png');
@@ -379,21 +377,22 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
 											}}
 										>
 											<CarouselContent className="ml-0">
-												{(randomRowImages[rowIndex] || []).map((src, i) => {
-													const currentSelectedIndex = selectedIndexes[rowIndex] ?? 0;
-													const isSelected = i === currentSelectedIndex;
+																										{(randomRowImages[rowIndex] || []).map((src, i) => {
+															// const currentSelectedIndex = selectedIndexes[rowIndex] ?? 0;
+															// const isSelected = i === currentSelectedIndex; // Commented out as unused
 													
 													return (
 														<CarouselItem key={`${rowIndex}-${i}`} className="basis-full flex-shrink-0">
 															<div className="flex justify-center w-full">
-																<img 
-																	src={src} 
-																	className="h-auto"
-																	style={{ 
-																		width: Math.max(360, scaled(DIM.leftBottom.w * 0.75 - 10)),
-																		maxWidth: '600px'
-																	}} 
-																/>
+																																			<img 
+																				src={src} 
+																				alt={`Fingerprint option ${i + 1}`}
+																				className="h-auto"
+																				style={{ 
+																					width: Math.max(360, scaled(DIM.leftBottom.w * 0.75 - 10)),
+																					maxWidth: '600px'
+																				}} 
+																			/>
 															</div>
 														</CarouselItem>
 													);

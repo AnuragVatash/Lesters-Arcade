@@ -9,7 +9,7 @@ import AuthPage from '@/components/auth/AuthPage';
 import UserDisplay from '@/components/ui/UserDisplay';
 import LeaderboardPage from '@/components/leaderboard/LeaderboardPage';
 import { getCurrentUser, type User } from '@/lib/auth';
-import { generateTestData, type GameType } from '@/lib/leaderboard';
+import { generateTestData } from '@/lib/leaderboard';
 
 type Game = 'casino' | 'cayo' | 'number';
 type Page = 'games' | 'leaderboard';
@@ -44,7 +44,7 @@ export default function Home() {
     setCurrentPage('games');
   };
 
-  const handleLeaderboardClick = (_gameType?: GameType) => {
+  const handleLeaderboardClick = () => {
     setCurrentPage('leaderboard');
   };
 
@@ -90,7 +90,7 @@ export default function Home() {
   }
 
   return (
-    <div className='bg-black min-h-screen relative overflow-hidden'>
+    <div className="bg-black min-h-screen relative overflow-hidden">
       {/* Matrix-style background */}
       <div className="absolute inset-0 bg-gradient-to-b from-black via-green-950/10 to-black"></div>
       <div className="absolute inset-0 opacity-5">
@@ -118,7 +118,7 @@ export default function Home() {
           onGameChange={setActiveGame}
           onLeaderboardClick={handleLeaderboardClick}
         />
-        <div className='flex items-center justify-center min-h-[calc(100vh-128px)]'>
+        <div className="flex items-center justify-center min-h-[calc(100vh-128px)]">
           {renderGame()}
         </div>
       </div>

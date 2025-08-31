@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ ok: true, count: selections.length });
-  } catch (_error) {
+  } catch {
     return NextResponse.json({ ok: false, error: 'Invalid request' }, { status: 400 });
   }
 }
