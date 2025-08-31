@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" fill="#000000"/>
+  <rect x="32" y="32" width="448" height="448" fill="#0a0a0a" stroke="#22c55e" stroke-width="4"/>
+  <rect x="64" y="80" width="384" height="32" fill="#22c55e"/>
+  <rect x="64" y="136" width="200" height="16" fill="#15803d"/>
+  <rect x="64" y="168" width="280" height="16" fill="#15803d"/>
+  <rect x="64" y="200" width="150" height="16" fill="#15803d"/>
+  <rect x="64" y="232" width="320" height="16" fill="#15803d"/>
+  <rect x="64" y="264" width="100" height="16" fill="#15803d"/>
+  <rect x="64" y="296" width="240" height="16" fill="#15803d"/>
+  <rect x="64" y="360" width="120" height="24" fill="#22c55e"/>
+  <rect x="200" y="360" width="120" height="24" fill="#22c55e"/>
+  <rect x="336" y="360" width="112" height="24" fill="#22c55e"/>
+  <text x="256" y="440" font-family="monospace" font-size="20" fill="#22c55e" text-anchor="middle" font-weight="bold">LESTER'S ARCADE</text>
+</svg>
