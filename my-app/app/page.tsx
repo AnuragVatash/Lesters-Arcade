@@ -75,7 +75,7 @@ export default function Home() {
         <div className="relative z-10 text-green-400 font-mono">
           <div className="text-center">
             <div className="text-2xl font-bold mb-4 tracking-wider">
-              LESTER'S ARCADE
+              LESTER&apos;S ARCADE
             </div>
             <div className="flex items-center justify-center space-x-2 text-sm opacity-70">
               <div className="animate-spin w-3 h-3 border-2 border-green-400 border-t-transparent rounded-full"></div>
