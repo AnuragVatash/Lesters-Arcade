@@ -24,28 +24,20 @@ interface CayoFingerprintProps {
 }
 
 export default function CayoFingerprint({ user }: CayoFingerprintProps) {
-  // Print set configuration
-  const PRINT_SETS = [
-    { dir: "print1", correctPieces: [1, 2, 3, 4] }, // First 4 pieces are correct for print1
-    // { dir: 'print2', correctPieces: [5, 6, 7, 8] }, // Last 4 pieces would be correct for print2 (when available)
-  ] as const;
-
-  const AVAILABLE_PRINT_SETS = [0]; // Only print1 available for now, add 1 when print2 is ready
-
-  // Current print set state
-  const [currentPrintSet, setCurrentPrintSet] = useState<number>(0);
+  // All 8 pieces now need to be matched correctly.
+  const PRINT_DIR = "print1";
 
   const rows = Array.from({ length: 8 });
 
-  // Dynamic asset paths based on current print set
+  // Dynamic asset paths
   const getAssetPath = (filename: string) =>
-    `/cayoFingerprints/${PRINT_SETS[currentPrintSet].dir}/${filename}`;
+    `/cayoFingerprints/${PRINT_DIR}/${filename}`;
   const baseImages = Array.from({ length: 8 }, (_, i) =>
     getAssetPath(`fp${i + 1}.png`)
   );
-  const CONNECTION_TIMEOUT_IMG = getAssetPath("connection_timeout.png");
+  const CONNECTION_TIMEOUT_IMG = `/cayoFingerprints/connection_timeout.png`;
   const CLONE_TARGET_IMG = getAssetPath("clone_target.png");
-  const DECIPHERED_IMG = getAssetPath("decyphered.png");
+  const DECIPHERED_IMG = `/cayoFingerprints/decyphered.png`;
 
   // Responsive scale system
   const [containerWidth, setContainerWidth] = useState(1280);
@@ -105,55 +97,12 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
     gameStarted,
     isScanning,
     onOracleActivated: () => {
-      // Auto-navigate all carousels to correct answers based on current print set
-      setTimeout(() => {
-        const correctPieces = PRINT_SETS[currentPrintSet].correctPieces;
-
-        for (let rowIdx = 0; rowIdx < 8; rowIdx++) {
-          const shouldBeSelected = correctPieces.includes(
-            (rowIdx + 1) as 1 | 2 | 3 | 4
-          );
-
-          // Find the carousel container element by looking for the transform style
-          const carouselContainers = document.querySelectorAll(".flex.ml-0");
-          const carouselContainer = Array.from(carouselContainers)[
-            rowIdx
-          ] as HTMLElement;
-
-          if (carouselContainer) {
-            if (shouldBeSelected) {
-              // Set to correct position: position 0 = 0px, position 1 = -308px, etc.
-              const correctTranslation = -rowIdx * 308;
-              carouselContainer.style.transform = `translate3d(${correctTranslation}px, 0px, 0px)`;
-
-              // Also set the transform for all carousel items within this container
-              const carouselItems = carouselContainer.querySelectorAll(
-                '[data-slot="carousel-item"]'
-              );
-              carouselItems.forEach((item) => {
-                (
-                  item as HTMLElement
-                ).style.transform = `translate3d(0px, 0px, 0px)`;
-              });
-            } else {
-              // Set to wrong position (avoid the correct position)
-              const wrongPosition = (rowIdx + 1) % 8;
-              const wrongTranslation = -wrongPosition * 308;
-              carouselContainer.style.transform = `translate3d(${wrongTranslation}px, 0px, 0px)`;
-
-              // Also set the transform for all carousel items within this container
-              const carouselItems = carouselContainer.querySelectorAll(
-                '[data-slot="carousel-item"]'
-              );
-              carouselItems.forEach((item) => {
-                (
-                  item as HTMLElement
-                ).style.transform = `translate3d(0px, 0px, 0px)`;
-              });
-            }
-          }
+      // Auto-navigate all carousels to correct answers
+      apiRefs.current.forEach((api, rowIdx) => {
+        if (api) {
+          api.scrollTo(rowIdx, true);
         }
-      }, 100);
+      });
     },
   });
 
@@ -169,17 +118,15 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
   // Remove automatic initialization - this will happen when Start is clicked
 
   const startGame = () => {
-    // Randomly select a print set
-    const selectedPrintSet = shuffle(AVAILABLE_PRINT_SETS)[0];
-    setCurrentPrintSet(selectedPrintSet);
+    // Reset initialization state for carousels to allow them to be re-scrambled
+    initializedRef.current.fill(false);
 
     // Generate consistent order for all carousels
     const generateConsistentImages = () => {
-      // Get the updated base images for the selected print set in consistent order (fp1, fp2, fp3, etc.)
+      // Get the updated base images in consistent order (fp1, fp2, fp3, etc.)
       const printSetBaseImages = Array.from(
         { length: 8 },
-        (_, i) =>
-          `/cayoFingerprints/${PRINT_SETS[selectedPrintSet].dir}/fp${i + 1}.png`
+        (_, i) => `/cayoFingerprints/${PRINT_DIR}/fp${i + 1}.png`
       );
 
       // Return the same consistent order for all rows
@@ -195,37 +142,11 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
 
     // Generate and set the consistent images
     setCarouselImages(generateConsistentImages());
-
     setGameStarted(true);
     setGameStartTime(Date.now());
     setTimeComparison(null);
     setFocusedRow(0);
     resetOracle();
-
-    // Set random transformations after a brief delay to ensure DOM is ready
-    setTimeout(() => {
-      const carouselContainers = document.querySelectorAll(".flex.ml-0");
-      randomPositions.forEach((position, rowIdx) => {
-        const carouselContainer = Array.from(carouselContainers)[
-          rowIdx
-        ] as HTMLElement;
-        if (carouselContainer) {
-          // Set random position using 308px multiples (0px, -308px, -616px, etc.)
-          const randomTranslation = -position * 308;
-          carouselContainer.style.transform = `translate3d(${randomTranslation}px, 0px, 0px)`;
-
-          // Set all carousel items to 0px transform
-          const carouselItems = carouselContainer.querySelectorAll(
-            '[data-slot="carousel-item"]'
-          );
-          carouselItems.forEach((item) => {
-            (
-              item as HTMLElement
-            ).style.transform = `translate3d(0px, 0px, 0px)`;
-          });
-        }
-      });
-    }, 200);
   };
 
   // Global keyboard navigation
@@ -264,39 +185,13 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
     if (!gameStarted) return;
 
     const incorrectRows: number[] = [];
-    const correctPieces = PRINT_SETS[currentPrintSet].correctPieces;
-
     for (let rowIdx = 0; rowIdx < 8; rowIdx++) {
-      // Find the carousel container element and read its transform value
-      const carouselContainers = document.querySelectorAll(".flex.ml-0");
-      const carouselContainer = Array.from(carouselContainers)[
-        rowIdx
-      ] as HTMLElement;
+      const currentPosition = selectedIndexes[rowIdx];
+      const correctPosition = rowIdx;
 
-      let currentPosition = 0;
-      if (carouselContainer) {
-        const transform = carouselContainer.style.transform;
-        const match = transform.match(/translate3d\((-?\d+)px/);
-        if (match) {
-          const translationX = parseInt(match[1]);
-          // Convert translation to position: 0px = position 0, -308px = position 1, etc.
-          currentPosition = Math.abs(translationX) / 308;
-        }
+      if (currentPosition !== correctPosition) {
+        incorrectRows.push(rowIdx + 1);
       }
-
-      // The correct position for row N should show fpN (position N for 0-based indexing)
-      const correctPosition = rowIdx; // Row 0 needs position 0 (fp1), Row 1 needs position 1 (fp2), etc.
-
-      // Check if this row's piece (rowIdx + 1) should be selected based on the current print set
-      const shouldBeSelected = correctPieces.includes(
-        (rowIdx + 1) as 1 | 2 | 3 | 4
-      );
-      const isAtCorrectPosition = currentPosition === correctPosition;
-
-      // Row is correct if: (should be selected AND is at correct position) OR (should NOT be selected AND is NOT at correct position)
-      const ok = shouldBeSelected ? isAtCorrectPosition : !isAtCorrectPosition;
-
-      if (!ok) incorrectRows.push(rowIdx + 1);
     }
     const allCorrect = incorrectRows.length === 0;
 
@@ -330,37 +225,16 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
       setGameStartTime(null);
       setResultMessage(null);
       resetOracle();
+
+      // Reset initialization state for carousels to allow them to be re-scrambled
+      initializedRef.current.fill(false);
+
       // Generate new random positions for restart
       const newRandomPositions = Array.from({ length: 8 }, () =>
         Math.floor(Math.random() * 8)
       );
       setSelectedIndexes(newRandomPositions);
       setInitialIndexes(newRandomPositions);
-
-      // Set new random transformations
-      setTimeout(() => {
-        const carouselContainers = document.querySelectorAll(".flex.ml-0");
-        newRandomPositions.forEach((position, rowIdx) => {
-          const carouselContainer = Array.from(carouselContainers)[
-            rowIdx
-          ] as HTMLElement;
-          if (carouselContainer) {
-            // Set random position using 308px multiples
-            const randomTranslation = -position * 308;
-            carouselContainer.style.transform = `translate3d(${randomTranslation}px, 0px, 0px)`;
-
-            // Set all carousel items to 0px transform
-            const carouselItems = carouselContainer.querySelectorAll(
-              '[data-slot="carousel-item"]'
-            );
-            carouselItems.forEach((item) => {
-              (
-                item as HTMLElement
-              ).style.transform = `translate3d(0px, 0px, 0px)`;
-            });
-          }
-        });
-      }, 200);
     }
   };
 
@@ -459,7 +333,7 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
                         setApi={(api?: CarouselApi) => {
                           if (!api) return;
                           apiRefs.current[rowIndex] = api;
-                          // Guard: initialize this row only once
+                          // Guard: initialize this row only once per game start
                           if (initializedRef.current[rowIndex]) return;
                           initializedRef.current[rowIndex] = true;
 
@@ -477,7 +351,8 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
                           const start = initialIndexes[rowIndex] ?? 0;
                           requestAnimationFrame(() => {
                             try {
-                              api.scrollTo(start);
+                              // Use true for an instant scroll to prevent visible scrambling
+                              api.scrollTo(start, true);
                             } catch {}
                             requestAnimationFrame(() => update());
                           });
