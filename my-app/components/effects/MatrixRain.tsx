@@ -100,28 +100,24 @@ class MatrixDrop {
   opacity: number;
   isGTA: boolean;
   gtaName: string;
-  gtaNameIndex: number;
-  headOpacity: number;
-  tailOpacity: number;
 
   constructor(x: number, speed: number, isGTA: boolean = false) {
     this.x = x;
     this.y = -50;
     this.speed = speed;
     this.isGTA = isGTA;
-    this.columnHeight = Math.floor(Math.random() * 15) + 8; // 8-22 characters
-    this.charSpacing = 20; // Space between characters
+    this.columnHeight = Math.floor(Math.random() * 12) + 6; // 6-17 characters
+    this.charSpacing = 18; // Space between characters
     this.opacity = 1;
-    this.headOpacity = 1;
-    this.tailOpacity = 0.1;
-    this.gtaNameIndex = 0;
     
     if (isGTA) {
       this.gtaName = gtaNames[Math.floor(Math.random() * gtaNames.length)];
       this.chars = this.gtaName.split('');
     } else {
+      // Random letters and numbers
+      const randomChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
       this.chars = Array.from({ length: this.columnHeight }, () => 
-        japaneseChars[Math.floor(Math.random() * japaneseChars.length)]
+        randomChars[Math.floor(Math.random() * randomChars.length)]
       );
     }
   }
@@ -133,9 +129,6 @@ class MatrixDrop {
     if (this.y > 100) {
       this.opacity = Math.max(0, 1 - (this.y - 100) / 200);
     }
-    
-    // Update character cycling for the head
-    this.gtaNameIndex = (this.gtaNameIndex + 0.1) % this.chars.length;
     
     return this.y < window.innerHeight + (this.columnHeight * this.charSpacing);
   }
@@ -156,7 +149,7 @@ class MatrixDrop {
       if (charY < -fontSize || charY > window.innerHeight + fontSize) continue;
       
       // Calculate opacity for this character (head is brightest, tail fades)
-      const charOpacity = Math.max(0, 1 - (i / this.columnHeight) * 0.9);
+      const charOpacity = Math.max(0, 1 - (i / this.columnHeight) * 0.8);
       const finalOpacity = charOpacity * this.opacity;
       
       if (finalOpacity <= 0) continue;
@@ -164,31 +157,21 @@ class MatrixDrop {
       ctx.globalAlpha = finalOpacity;
       
       if (this.isGTA) {
-        // GTA names in bright green
-        if (i === 0) {
-          // Head character - brightest
-          ctx.fillStyle = '#00FF41';
-          ctx.shadowColor = '#00FF41';
-          ctx.shadowBlur = 15;
-        } else {
-          // Body characters - dimmer
-          ctx.fillStyle = `rgba(0, 255, 65, ${0.3 + (charOpacity * 0.7)})`;
-          ctx.shadowColor = '#00FF41';
-          ctx.shadowBlur = 5;
-        }
+        // GTA names in bright green - no blur
+        ctx.fillStyle = '#00FF41';
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
         
-        // Use the cycling character for the head, static for body
-        const char = i === 0 ? this.chars[Math.floor(this.gtaNameIndex)] : this.chars[i % this.chars.length];
+        const char = this.chars[i % this.chars.length];
         ctx.fillText(char, this.x, charY);
       } else {
-        // Japanese characters in different shades
-        const greenIntensity = 0.2 + (charOpacity * 0.8);
+        // Random letters in different shades - no blur
+        const greenIntensity = 0.3 + (charOpacity * 0.7);
         ctx.fillStyle = `rgba(0, 255, 65, ${greenIntensity})`;
-        ctx.shadowColor = 'rgba(0, 255, 65, 0.3)';
-        ctx.shadowBlur = 3;
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
         
-        // Cycle through characters for the head, static for body
-        const char = i === 0 ? this.chars[Math.floor(this.gtaNameIndex)] : this.chars[i % this.chars.length];
+        const char = this.chars[i];
         ctx.fillText(char, this.x, charY);
       }
     }

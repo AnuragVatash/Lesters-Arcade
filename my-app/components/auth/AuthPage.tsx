@@ -74,9 +74,9 @@ export default function AuthPage({ onAuthenticated }: AuthPageProps) {
         
         {/* Matrix Rain Effect */}
         <MatrixRain 
-          className="opacity-40"
-          speed={1.2}
-          density={0.015}
+          className="opacity-50"
+          speed={1.5}
+          density={0.008}
           enabled={true}
         />
         
@@ -131,9 +131,9 @@ export default function AuthPage({ onAuthenticated }: AuthPageProps) {
       
       {/* Matrix Rain Effect */}
       <MatrixRain 
-        className="opacity-40"
-        speed={1.2}
-        density={0.015}
+        className="opacity-50"
+        speed={1.5}
+        density={0.008}
         enabled={true}
       />
       
