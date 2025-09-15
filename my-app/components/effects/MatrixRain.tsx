@@ -3,8 +3,8 @@
 import React, { useRef, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 
-// Matrix Rain Effect with GTA Universe Names
-// This component creates a matrix-style falling text effect with Japanese characters and GTA names
+// Digital Matrix Rain Animation
+// Ultra HD quality with Japanese katakana characters, glow effects, and depth
 
 interface MatrixRainProps {
   width?: number;
@@ -15,82 +15,26 @@ interface MatrixRainProps {
   enabled?: boolean;
 }
 
-// GTA Universe Names and Terms
-const gtaNames = [
-  // Protagonists
-  'Niko Bellic', 'Michael De Santa', 'Franklin Clinton', 'Trevor Philips',
-  'Tommy Vercetti', 'Carl Johnson', 'Claude Speed', 'Johnny Klebitz',
-  'Luis Lopez', 'Huang Lee', 'Victor Vance', 'Tony Cipriani',
-  'Salvatore Leone', 'Donald Love', 'Asuka Kasen', 'Kenji Kasen',
-  'Kazuki Kasen', 'Toshiko Kasen', 'Yakuza', 'Triad',
-  
-  // Locations
-  'Liberty City', 'Los Santos', 'San Fierro', 'Las Venturas',
-  'Vice City', 'Alderney', 'Bohan', 'Dukes', 'Broker',
-  'Algonquin', 'Chinatown', 'Little Italy', 'Hove Beach',
-  'Vinewood', 'Grove Street', 'Ganton', 'East Los Santos',
-  'Las Venturas Strip', 'The Strip', 'Downtown Los Santos',
-  
-  // Cars
-  'Infernus', 'Banshee', 'Cheetah', 'Comet', 'Stinger',
-  'Stinger GT', 'Turismo', 'Bullet', 'Super GT', 'ZR-350',
-  'Elegy', 'Jester', 'Sultan', 'Euros', 'Flash', 'Uranus',
-  'Sultan RS', 'Elegy RH8', 'Feltzer', 'Stratum', 'Windsor',
-  'Monroe', 'Peyote', 'Manana', 'Hermes', 'Hustler',
-  'Phoenix', 'Sabre', 'Sabre Turbo', 'Tampa', 'Virgo',
-  
-  // Organizations
-  'Grove Street Families', 'Ballas', 'Vagos', 'Los Santos Vagos',
-  'Varrios Los Aztecas', 'Marabunta Grande', 'San Fierro Rifa',
-  'Da Nang Boys', 'Red Gecko Tong', 'Mountain Cloud Boys',
-  'Leone Family', 'Forelli Family', 'Sindacco Family',
-  'Pavarotti Family', 'Messina Family', 'Ancelotti Family',
-  'Gambetti Family', 'Pegorino Family', 'Lupisella Family',
-  
-  // Weapons
-  'AK-47', 'M4', 'Desert Eagle', 'Combat Shotgun', 'Sniper Rifle',
-  'RPG', 'Grenade', 'Molotov Cocktail', 'Baseball Bat',
-  'Chainsaw', 'Katana', 'Brass Knuckles', 'Tear Gas',
-  
-  // Misc Terms
-  'Grove Street', 'Grove Street 4 Life', 'Grove Street Families',
-  'Ballin', 'Gangsta', 'OG', 'Respect', 'Reputation',
-  'Wanted Level', 'Police', 'FBI', 'SWAT', 'Army',
-  'Hospital', 'Police Station', 'Pay N Spray', 'Ammu-Nation',
-  'Burger Shot', 'Cluckin Bell', 'Pizza Stack', 'Rusty Brown',
-  'Binco', 'Sub Urban', 'Zip', 'Victim', 'Didier Sachs',
-  'Prolaps', 'Bargain Bin', 'Binco', 'Sub Urban', 'Zip'
-];
-
-// Japanese Characters (Hiragana, Katakana, and some Kanji)
-const japaneseChars = [
-  // Hiragana
-  'あ', 'い', 'う', 'え', 'お', 'か', 'き', 'く', 'け', 'こ',
-  'さ', 'し', 'す', 'せ', 'そ', 'た', 'ち', 'つ', 'て', 'と',
-  'な', 'に', 'ぬ', 'ね', 'の', 'は', 'ひ', 'ふ', 'へ', 'ほ',
-  'ま', 'み', 'む', 'め', 'も', 'や', 'ゆ', 'よ', 'ら', 'り',
-  'る', 'れ', 'ろ', 'わ', 'を', 'ん',
-  
-  // Katakana
+// Japanese Katakana Characters for authentic Matrix effect
+const katakanaChars = [
   'ア', 'イ', 'ウ', 'エ', 'オ', 'カ', 'キ', 'ク', 'ケ', 'コ',
   'サ', 'シ', 'ス', 'セ', 'ソ', 'タ', 'チ', 'ツ', 'テ', 'ト',
   'ナ', 'ニ', 'ヌ', 'ネ', 'ノ', 'ハ', 'ヒ', 'フ', 'ヘ', 'ホ',
   'マ', 'ミ', 'ム', 'メ', 'モ', 'ヤ', 'ユ', 'ヨ', 'ラ', 'リ',
-  'ル', 'レ', 'ロ', 'ワ', 'ヲ', 'ン',
-  
-  // Some Kanji
-  '人', '大', '小', '中', '上', '下', '左', '右', '前', '後',
-  '東', '西', '南', '北', '車', '道', '街', '市', '国', '家',
-  '水', '火', '土', '金', '木', '月', '日', '年', '時', '分',
-  '秒', '今', '昔', '新', '古', '高', '低', '長', '短', '広',
-  '狭', '多', '少', '強', '弱', '早', '遅', '美', '醜', '善',
-  '悪', '正', '邪', '真', '偽', '生', '死', '愛', '憎', '喜',
-  '悲', '怒', '楽', '苦', '幸', '不幸', '成功', '失敗', '勝利',
-  '敗北', '希望', '絶望', '夢', '現実', '過去', '未来', '現在'
+  'ル', 'レ', 'ロ', 'ワ', 'ヲ', 'ン', 'ガ', 'ギ', 'グ', 'ゲ',
+  'ゴ', 'ザ', 'ジ', 'ズ', 'ゼ', 'ゾ', 'ダ', 'ヂ', 'ヅ', 'デ',
+  'ド', 'バ', 'ビ', 'ブ', 'ベ', 'ボ', 'パ', 'ピ', 'プ', 'ペ',
+  'ポ', 'ッ', 'ャ', 'ュ', 'ョ', 'ァ', 'ィ', 'ゥ', 'ェ', 'ォ'
 ];
 
-// Matrix Rain Drop Class
-class MatrixDrop {
+// Numbers for Matrix effect
+const numbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+
+// Combined character set
+const matrixChars = [...katakanaChars, ...numbers];
+
+// Matrix Rain Stream Class
+class MatrixStream {
   x: number;
   y: number;
   speed: number;
@@ -98,48 +42,54 @@ class MatrixDrop {
   columnHeight: number;
   charSpacing: number;
   opacity: number;
-  isGTA: boolean;
-  gtaName: string;
+  depth: number; // 0 = foreground, 1 = background
+  glowIntensity: number;
+  trailLength: number;
+  charIndex: number;
 
-  constructor(x: number, speed: number, isGTA: boolean = false) {
+  constructor(x: number, speed: number) {
     this.x = x;
-    this.y = -50;
-    this.speed = speed;
-    this.isGTA = isGTA;
-    this.columnHeight = Math.floor(Math.random() * 12) + 6; // 6-17 characters
-    this.charSpacing = 18; // Space between characters
+    this.y = -Math.random() * 1000; // Start off-screen
+    this.speed = speed + Math.random() * 2; // Varying speeds
+    this.columnHeight = Math.floor(Math.random() * 20) + 15; // 15-34 characters
+    this.charSpacing = 20; // Space between characters
     this.opacity = 1;
+    this.depth = Math.random(); // Random depth for layered effect
+    this.glowIntensity = Math.random() * 0.5 + 0.3; // Random glow intensity
+    this.trailLength = Math.floor(Math.random() * 8) + 5; // 5-12 character trail
+    this.charIndex = 0;
     
-    if (isGTA) {
-      this.gtaName = gtaNames[Math.floor(Math.random() * gtaNames.length)];
-      this.chars = this.gtaName.split('');
-    } else {
-      // Random letters and numbers
-      const randomChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-      this.chars = Array.from({ length: this.columnHeight }, () => 
-        randomChars[Math.floor(Math.random() * randomChars.length)]
-      );
-    }
+    // Generate random katakana and number characters
+    this.chars = Array.from({ length: this.columnHeight }, () => 
+      matrixChars[Math.floor(Math.random() * matrixChars.length)]
+    );
   }
 
   update(): boolean {
     this.y += this.speed;
     
+    // Cycle through characters for the head
+    this.charIndex = (this.charIndex + 0.1) % this.chars.length;
+    
     // Fade out as it falls
     if (this.y > 100) {
-      this.opacity = Math.max(0, 1 - (this.y - 100) / 200);
+      this.opacity = Math.max(0, 1 - (this.y - 100) / 300);
     }
     
-    return this.y < window.innerHeight + (this.columnHeight * this.charSpacing);
+    return this.y < window.innerHeight + (this.columnHeight * this.charSpacing) + 100;
   }
 
   draw(ctx: CanvasRenderingContext2D, fontSize: number): void {
     if (this.opacity <= 0) return;
 
     ctx.save();
-    ctx.globalAlpha = this.opacity;
     ctx.font = `${fontSize}px monospace`;
     ctx.textAlign = 'center';
+    
+    // Calculate depth-based properties
+    const depthOpacity = this.depth < 0.3 ? 1 : 0.3 + (1 - this.depth) * 0.7; // Foreground bright, background dim
+    const depthSize = this.depth < 0.3 ? 1 : 0.7 + (1 - this.depth) * 0.3; // Foreground larger, background smaller
+    const depthBlur = this.depth < 0.3 ? 0 : (1 - this.depth) * 8; // Foreground sharp, background blurred
     
     // Draw the column of characters
     for (let i = 0; i < this.columnHeight; i++) {
@@ -149,31 +99,47 @@ class MatrixDrop {
       if (charY < -fontSize || charY > window.innerHeight + fontSize) continue;
       
       // Calculate opacity for this character (head is brightest, tail fades)
-      const charOpacity = Math.max(0, 1 - (i / this.columnHeight) * 0.8);
-      const finalOpacity = charOpacity * this.opacity;
+      const charOpacity = Math.max(0, 1 - (i / this.columnHeight) * 0.9);
+      const finalOpacity = charOpacity * this.opacity * depthOpacity;
       
       if (finalOpacity <= 0) continue;
       
       ctx.globalAlpha = finalOpacity;
       
-      if (this.isGTA) {
-        // GTA names in bright green - no blur
-        ctx.fillStyle = '#00FF41';
-        ctx.shadowColor = 'transparent';
-        ctx.shadowBlur = 0;
+      // Get character (cycling for head, static for body)
+      const char = i === 0 ? this.chars[Math.floor(this.charIndex)] : this.chars[i % this.chars.length];
+      
+      // Calculate color intensity based on position and depth
+      const greenIntensity = 0.2 + (charOpacity * 0.8) * depthOpacity;
+      const color = `rgba(0, 255, 65, ${greenIntensity})`;
+      
+      // Apply depth-based scaling
+      const scale = depthSize;
+      ctx.scale(scale, scale);
+      
+      // Apply glow effect
+      if (this.depth < 0.5) { // Only foreground streams get glow
+        ctx.shadowColor = '#00FF41';
+        ctx.shadowBlur = this.glowIntensity * 15;
+        ctx.fillStyle = color;
+        ctx.fillText(char, this.x / scale, charY / scale);
         
-        const char = this.chars[i % this.chars.length];
-        ctx.fillText(char, this.x, charY);
+        // Add trailing blur effect
+        if (i < this.trailLength) {
+          ctx.shadowBlur = this.glowIntensity * 8;
+          ctx.globalAlpha = finalOpacity * 0.3;
+          ctx.fillText(char, this.x / scale, charY / scale);
+        }
       } else {
-        // Random letters in different shades - no blur
-        const greenIntensity = 0.3 + (charOpacity * 0.7);
-        ctx.fillStyle = `rgba(0, 255, 65, ${greenIntensity})`;
+        // Background streams - no glow, just color
         ctx.shadowColor = 'transparent';
         ctx.shadowBlur = 0;
-        
-        const char = this.chars[i];
-        ctx.fillText(char, this.x, charY);
+        ctx.fillStyle = color;
+        ctx.fillText(char, this.x / scale, charY / scale);
       }
+      
+      // Reset scale for next character
+      ctx.scale(1 / scale, 1 / scale);
     }
     
     ctx.restore();
@@ -190,53 +156,52 @@ export default function MatrixRain({
 }: MatrixRainProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
-  const dropsRef = useRef<MatrixDrop[]>([]);
+  const streamsRef = useRef<MatrixStream[]>([]);
   const lastTimeRef = useRef<number>(0);
 
-  const createDrop = useCallback((x: number) => {
-    const isGTA = Math.random() < 0.3; // 30% chance for GTA names
-    const dropSpeed = speed + Math.random() * 2;
-    return new MatrixDrop(x, dropSpeed, isGTA);
+  const createStream = useCallback((x: number) => {
+    const streamSpeed = speed + Math.random() * 3; // Varying speeds
+    return new MatrixStream(x, streamSpeed);
   }, [speed]);
 
-  const updateDrops = useCallback(() => {
+  const updateStreams = useCallback(() => {
     const now = Date.now();
     const deltaTime = now - lastTimeRef.current;
     lastTimeRef.current = now;
 
-    // Add new drops
+    // Add new streams
     if (Math.random() < density) {
       const x = Math.random() * width;
-      dropsRef.current.push(createDrop(x));
+      streamsRef.current.push(createStream(x));
     }
 
-    // Update existing drops
-    dropsRef.current = dropsRef.current.filter(drop => drop.update());
-  }, [width, density, createDrop]);
+    // Update existing streams
+    streamsRef.current = streamsRef.current.filter(stream => stream.update());
+  }, [width, density, createStream]);
 
-  const drawDrops = useCallback(() => {
+  const drawStreams = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Clear canvas with fade effect
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+    // Clear canvas with subtle fade effect for trailing
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.03)';
     ctx.fillRect(0, 0, width, height);
 
-    // Draw drops
-    const fontSize = Math.min(width / 100, 16);
-    dropsRef.current.forEach(drop => drop.draw(ctx, fontSize));
+    // Draw streams
+    const fontSize = Math.min(width / 80, 18);
+    streamsRef.current.forEach(stream => stream.draw(ctx, fontSize));
   }, [width, height]);
 
   const animate = useCallback(() => {
     if (!enabled) return;
 
-    updateDrops();
-    drawDrops();
+    updateStreams();
+    drawStreams();
     animationRef.current = requestAnimationFrame(animate);
-  }, [enabled, updateDrops, drawDrops]);
+  }, [enabled, updateStreams, drawStreams]);
 
   // Initialize canvas
   useEffect(() => {
@@ -246,11 +211,11 @@ export default function MatrixRain({
     canvas.width = width;
     canvas.height = height;
     
-    // Set initial drops
-    dropsRef.current = Array.from({ length: Math.floor(width * density) }, () => 
-      createDrop(Math.random() * width)
+    // Set initial streams
+    streamsRef.current = Array.from({ length: Math.floor(width * density) }, () => 
+      createStream(Math.random() * width)
     );
-  }, [width, height, density, createDrop]);
+  }, [width, height, density, createStream]);
 
   // Start animation
   useEffect(() => {
