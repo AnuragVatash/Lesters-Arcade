@@ -48,7 +48,7 @@ export interface ParticleSystemProps {
   onParticleUpdate?: (particles: Particle[]) => void;
 }
 
-export default function ParticleSystem({
+function ParticleSystem({
   width,
   height,
   particleCount = 100,
@@ -58,7 +58,7 @@ export default function ParticleSystem({
   onParticleUpdate
 }: ParticleSystemProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number | undefined>(undefined);
   const particlesRef = useRef<Particle[]>([]);
   const lastSpawnRef = useRef<number>(0);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -103,16 +103,16 @@ export default function ParticleSystem({
       particle.vy *= particle.friction;
     }
     
-    // Update rotation
-    if (particle.rotationSpeed) {
-      particle.rotation += particle.rotationSpeed;
-    }
-    
-    // Update scale
-    if (particle.scaleSpeed) {
-      particle.scale += particle.scaleSpeed;
-      particle.scale = Math.max(0.1, particle.scale);
-    }
+  // Update rotation
+  if (particle.rotationSpeed && particle.rotation !== undefined) {
+    particle.rotation += particle.rotationSpeed;
+  }
+  
+  // Update scale
+  if (particle.scaleSpeed && particle.scale !== undefined) {
+    particle.scale += particle.scaleSpeed;
+    particle.scale = Math.max(0.1, particle.scale);
+  }
     
     // Update life
     particle.life -= 1;
@@ -177,8 +177,12 @@ export default function ParticleSystem({
         ctx.save();
         ctx.globalAlpha = updatedParticle.alpha;
         ctx.translate(updatedParticle.x, updatedParticle.y);
-        ctx.rotate(updatedParticle.rotation);
-        ctx.scale(updatedParticle.scale, updatedParticle.scale);
+        if (updatedParticle.rotation !== undefined) {
+          ctx.rotate(updatedParticle.rotation);
+        }
+        if (updatedParticle.scale !== undefined) {
+          ctx.scale(updatedParticle.scale, updatedParticle.scale);
+        }
         
         // Draw particle shape
         ctx.fillStyle = updatedParticle.color;
@@ -313,7 +317,6 @@ export const createTrail = (
       life: 20 + i * 2,
       size: 2 - i * 0.1,
       color: `hsl(${120 + i * 10}, 100%, ${70 - i * 5}%)`,
-      alpha: 1 - i * 0.1,
       friction: 0.9,
       scaleSpeed: -0.01
     });
@@ -337,7 +340,6 @@ export const createMatrixRain = (
         life: height / 2 + Math.random() * height / 2,
         size: Math.random() * 2 + 1,
         color: '#00FF41',
-        alpha: 0.8,
         friction: 1,
         scaleSpeed: 0
       });
@@ -363,7 +365,6 @@ export const createGlowEffect = (
       life: 60,
       size: Math.random() * 3 + 1,
       color,
-      alpha: 0.6,
       friction: 0.95,
       scaleSpeed: -0.01
     });
@@ -384,7 +385,6 @@ export const createSparkle = (
       life: 30,
       size: Math.random() * 2 + 1,
       color: '#FFFF00',
-      alpha: 1,
       friction: 0.9,
       rotationSpeed: (Math.random() - 0.5) * 0.5,
       scaleSpeed: -0.03
@@ -417,7 +417,7 @@ export const useParticleSystem = () => {
     createMatrixRain(width, height, addParticle);
   }, [addParticle]);
   
-  const createGlowEffect = useCallback((x: number, y: number, color?: string) => {
+  const createGlowEffectCallback = useCallback((x: number, y: number, color?: string) => {
     createGlowEffect(x, y, color, addParticle);
   }, [addParticle]);
   
@@ -432,7 +432,7 @@ export const useParticleSystem = () => {
     createExplosionEffect,
     createTrailEffect,
     createMatrixRainEffect,
-    createGlowEffect,
+    createGlowEffect: createGlowEffectCallback,
     createSparkleEffect
   };
 };

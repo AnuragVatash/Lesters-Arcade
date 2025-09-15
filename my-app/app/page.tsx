@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import CayoFingerprint from "@/components/games/cayoFingerprint/CayoFingerprint";
 import CasinoFingerprint from "@/components/games/casinoFingerprint/CasinoFingerprint";
 import NumberFinder from "@/components/games/numberFinder/numberFinder";
@@ -8,8 +8,13 @@ import Navbar from "@/components/ui/navbar";
 import AuthPage from "@/components/auth/AuthPage";
 import LeaderboardPage from "@/components/leaderboard/LeaderboardPage";
 import SystemStatus from "@/components/ui/SystemStatus";
+// import ParticleSystem from "@/components/effects/ParticleSystem";
+// import AudioTest from "@/components/ui/AudioTest";
 import { getCurrentUser, type User } from "@/lib/auth";
 import { generateTestData, type GameType } from "@/lib/leaderboard";
+// import { AudioManager } from "@/lib/audioSystem";
+// import { AnimationManager } from "@/lib/animations";
+// import { InputManager } from "@/lib/inputSystem";
 
 type Game = "casino" | "cayo" | "number";
 type Page = "games" | "leaderboard";
@@ -18,10 +23,52 @@ export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [activeGame, setActiveGame] = useState<Game>("cayo");
   const [currentPage, setCurrentPage] = useState<Page>("games");
-
   const [isLoading, setIsLoading] = useState(true);
+  const [showParticles, setShowParticles] = useState(true);
+  const [audioEnabled, setAudioEnabled] = useState(true);
+  
+  // Refs for systems
+  // const audioManagerRef = useRef<AudioManager | null>(null);
+  // const animationManagerRef = useRef<AnimationManager | null>(null);
+  // const inputManagerRef = useRef<InputManager | null>(null);
+  const particleSystemRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
+    // Initialize systems (temporarily disabled to fix corruption)
+    // const initializeSystems = async () => {
+    //   try {
+    //     // Initialize animation manager (always works)
+    //     animationManagerRef.current = AnimationManager.getInstance();
+    //     
+    //     // Initialize input manager (always works)
+    //     inputManagerRef.current = new InputManager();
+    //     inputManagerRef.current.init();
+    //     
+    //     // Initialize audio manager (temporarily disabled)
+    //     // try {
+    //     //   audioManagerRef.current = new AudioManager();
+    //     //   await audioManagerRef.current.init();
+    //     //
+    //     //   // Preload some common sounds using Web Audio API
+    //     //   await audioManagerRef.current.createWebAudioClip('startup', { volume: 0.5 });
+    //     //   await audioManagerRef.current.createWebAudioClip('login', { volume: 0.5 });
+    //     //   await audioManagerRef.current.createWebAudioClip('logout', { volume: 0.5 });
+    //     //   await audioManagerRef.current.createWebAudioClip('click', { volume: 0.3 });
+    //     //   await audioManagerRef.current.createWebAudioClip('back', { volume: 0.3 });
+    //     // } catch (audioError) {
+    //     //   console.warn('Audio system not available:', audioError);
+    //     // }
+
+    //     // Add startup animation (non-blocking)
+    //     if (animationManagerRef.current) {
+    //       animationManagerRef.current.createGlitchEffect(document.body, 0.1);
+    //     }
+
+    //   } catch (error) {
+    //     console.warn('Failed to initialize some systems:', error);
+    //   }
+    // };
+
     // Check if user is already authenticated
     const currentUser = getCurrentUser();
     setUser(currentUser);
@@ -32,11 +79,20 @@ export default function Home() {
       generateTestData();
     }
 
+    // Don't wait for systems to initialize - load immediately
     setIsLoading(false);
+
+    // Initialize systems in background (temporarily disabled)
+    // initializeSystems();
   }, []);
 
   const handleAuthenticated = (authenticatedUser: User) => {
     setUser(authenticatedUser);
+
+    // Add login animation (temporarily disabled)
+    // if (animationManagerRef.current) {
+    //   animationManagerRef.current.createFadeInEffect(document.body, 1000);
+    // }
   };
 
   const handleLogout = () => {
@@ -94,7 +150,7 @@ export default function Home() {
 
   return (
     <div className="bg-black min-h-screen relative overflow-hidden">
-      {/* Matrix-style background */}
+      {/* Enhanced Matrix-style background */}
       <div className="absolute inset-0 bg-gradient-to-b from-black via-green-950/10 to-black"></div>
       <div className="absolute inset-0 opacity-5">
         <div className="grid grid-cols-20 grid-rows-20 h-full w-full">
@@ -108,13 +164,42 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Glitch overlay */}
+             {/* Particle System (temporarily disabled) */}
+             {/* {showParticles && (
+               <ParticleSystem
+                 width={typeof window !== 'undefined' ? window.innerWidth : 800}
+                 height={typeof window !== 'undefined' ? window.innerHeight : 600}
+                 particleCount={50}
+                 spawnRate={0.05}
+                 enabled={true}
+                 className="opacity-30"
+               />
+             )} */}
+
+      {/* Enhanced Glitch overlay */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-green-400 to-transparent animate-pulse"></div>
         <div
           className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-green-400 to-transparent animate-pulse"
           style={{ animationDelay: "1s" }}
         ></div>
+        <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-pulse opacity-50"></div>
+      </div>
+
+      {/* System Controls */}
+      <div className="absolute top-4 right-4 z-20 flex gap-2">
+        <button
+          onClick={() => setShowParticles(!showParticles)}
+          className="px-3 py-1 bg-green-900/50 border border-green-500/30 rounded text-green-400 text-xs hover:bg-green-800/50 transition-colors"
+        >
+          {showParticles ? 'Hide' : 'Show'} Particles
+        </button>
+        <button
+          onClick={() => setAudioEnabled(!audioEnabled)}
+          className="px-3 py-1 bg-green-900/50 border border-green-500/30 rounded text-green-400 text-xs hover:bg-green-800/50 transition-colors"
+        >
+          {audioEnabled ? '🔊' : '🔇'} Audio
+        </button>
       </div>
 
       <div className="relative z-10">
@@ -135,6 +220,7 @@ export default function Home() {
         )}
       </div>
       <SystemStatus />
+      {/* <AudioTest /> */}
     </div>
   );
 }

@@ -1,13 +1,15 @@
 
 'use client';
 
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { type User } from '@/lib/auth';
 import { submitTime as submitLeaderboardTime } from '@/lib/leaderboard';
 import TimeComparisonDisplay from '@/components/ui/TimeComparison';
 import ScanningPopup from '@/components/ui/ScanningPopup';
 import { useOracle } from '@/hooks/useOracle';
+// import { AudioManager } from '@/lib/audioSystem';
+// import { AnimationManager } from '@/lib/animations';
 
 type Piece = {
   setId: number; // which print set
@@ -43,6 +45,10 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
   const [containerWidth, setContainerWidth] = useState(1280);
   const SCALE = containerWidth / 1920;
   const scaled = (n: number) => Math.round(n * SCALE);
+  
+  // Audio and animation refs (temporarily disabled)
+  // const audioManagerRef = useRef<AudioManager | null>(null);
+  // const animationManagerRef = useRef<AnimationManager | null>(null);
 
   useEffect(() => {
     const updateScale = () => {
@@ -54,6 +60,35 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
     window.addEventListener('resize', updateScale);
     return () => window.removeEventListener('resize', updateScale);
   }, []);
+
+  // Initialize audio and animation systems (temporarily disabled)
+  // useEffect(() => {
+  //   const initializeSystems = async () => {
+  //     try {
+  //       // Initialize animation manager (always works)
+  //       animationManagerRef.current = AnimationManager.getInstance();
+  //       
+  //       // Initialize audio manager (temporarily disabled)
+  //       // try {
+  //       //   audioManagerRef.current = new AudioManager();
+  //       //   await audioManagerRef.current.init();
+  //       //   
+  //       //   // Preload game sounds using Web Audio API
+  //       //   await audioManagerRef.current.createWebAudioClip('pieceClick', { volume: 0.4 });
+  //       //   await audioManagerRef.current.createWebAudioClip('pieceCorrect', { volume: 0.6 });
+  //       //   await audioManagerRef.current.createWebAudioClip('pieceWrong', { volume: 0.5 });
+  //       //   await audioManagerRef.current.createWebAudioClip('gameComplete', { volume: 0.7 });
+  //       //   await audioManagerRef.current.createWebAudioClip('scanning', { volume: 0.4 });
+  //       // } catch (audioError) {
+  //       //   console.warn('Audio system not available:', audioError);
+  //       // }
+  //     } catch (error) {
+  //       console.warn('Failed to initialize systems:', error);
+  //     }
+  //   };
+
+  //   initializeSystems();
+  // }, []);
 
   // Dimensions from dimensions.txt (1920 base)
   const DIMENSIONS = {
@@ -242,6 +277,20 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
 
   const handleFingerprintClick = (index: number) => {
     if (isLocked || isSubmitting) return;
+
+    // Play click sound (non-blocking) - temporarily disabled
+    // if (audioManagerRef.current) {
+    //   audioManagerRef.current.play('pieceClick').catch(() => {});
+    // }
+
+    // Add click animation - temporarily disabled
+    // if (animationManagerRef.current) {
+    //   const element = document.querySelector(`[data-piece-index="${index}"]`);
+    //   if (element) {
+    //     animationManagerRef.current.createBounceEffect(element as HTMLElement, 20, 200);
+    //   }
+    // }
+    
     const next = new Set(selectedTileIndexes);
     if (next.has(index)) {
       next.delete(index);
@@ -263,6 +312,20 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
       setTimeout(() => setResultMessage(null), 3000);
       return;
     }
+    
+    // Play scanning sound (non-blocking) - temporarily disabled
+    // if (audioManagerRef.current) {
+    //   audioManagerRef.current.play('scanning').catch(() => {});
+    // }
+
+    // Add scanning animation - temporarily disabled
+    // if (animationManagerRef.current) {
+    //   const submitButton = document.querySelector('[data-submit-button]');
+    //   if (submitButton) {
+    //     animationManagerRef.current.createBounceEffect(submitButton as HTMLElement, 20, 500);
+    //   }
+    // }
+    
     setIsSubmitting(true);
     
     // Validate the selection
@@ -277,6 +340,16 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
     setIsScanning(false);
     
     if (isCorrect) {
+      // Play success sound (non-blocking) - temporarily disabled
+      // if (audioManagerRef.current) {
+      //   audioManagerRef.current.play('gameComplete').catch(() => {});
+      // }
+
+      // Add success animation - temporarily disabled
+      // if (animationManagerRef.current) {
+      //   animationManagerRef.current.createGlitchEffect(document.body, 0.1);
+      // }
+      
       // Game completed successfully! Calculate time and submit to leaderboard
       if (gameStartTime) {
         const gameTime = Date.now() - gameStartTime;
@@ -294,6 +367,16 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
       setGameStartTime(null);
       setResultMessage(null);
     } else {
+      // Play error sound (non-blocking) - temporarily disabled
+      // if (audioManagerRef.current) {
+      //   audioManagerRef.current.play('pieceWrong').catch(() => {});
+      // }
+
+      // Add error animation - temporarily disabled
+      // if (animationManagerRef.current) {
+      //   animationManagerRef.current.createWobbleEffect(document.body, 5, 500);
+      // }
+      
       // Incorrect - restart the entire game
       setIsLocked(true);
       setGridPieces([]);
@@ -415,6 +498,7 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
                       )}
                       style={{ width: TILE_SIZE, height: TILE_SIZE, marginBottom: 12 }}
                       onClick={() => handleFingerprintClick(index)}
+                      data-piece-index={index}
                     >
                       <img
                         src={tileSrc(piece)}

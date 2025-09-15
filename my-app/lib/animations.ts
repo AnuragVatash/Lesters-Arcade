@@ -30,6 +30,8 @@ export interface ParticleConfig {
   friction?: number;
 }
 
+export type Animation = AnimationEffect | { interval: number; cancel?: () => void } | { cancel: () => void };
+
 export class AnimationManager {
   private static instance: AnimationManager;
   private animations: Map<string, Animation> = new Map();
@@ -90,7 +92,7 @@ export class AnimationManager {
         const glitchedText = originalText?.split('').map(char => 
           Math.random() < intensity ? glitchChars[Math.floor(Math.random() * glitchChars.length)] : char
         ).join('');
-        element.textContent = glitchedText;
+        element.textContent = glitchedText || null;
         
         setTimeout(() => {
           element.textContent = originalText;
@@ -370,9 +372,9 @@ export class AnimationManager {
   // Stop all animations
   stopAllAnimations(): void {
     this.animations.forEach(animation => {
-      if ('cancel' in animation) {
+      if ('cancel' in animation && animation.cancel) {
         animation.cancel();
-      } else if ('clearInterval' in animation) {
+      } else if ('interval' in animation) {
         clearInterval(animation.interval);
       }
     });
@@ -388,9 +390,9 @@ export class AnimationManager {
   stopAnimation(name: string): void {
     const animation = this.animations.get(name);
     if (animation) {
-      if ('cancel' in animation) {
+      if ('cancel' in animation && animation.cancel) {
         animation.cancel();
-      } else if ('clearInterval' in animation) {
+      } else if ('interval' in animation) {
         clearInterval(animation.interval);
       }
       this.animations.delete(name);

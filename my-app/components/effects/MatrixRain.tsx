@@ -15,23 +15,137 @@ interface MatrixRainProps {
   enabled?: boolean;
 }
 
-// Japanese Katakana Characters for authentic Matrix effect
+// GTA Universe Words for Matrix Rain
+const gtaWords = [
+  // Protagonists
+  'Niko', 'Michael', 'Franklin', 'Trevor', 'Tommy', 'Carl', 'Claude', 'Johnny',
+  'Luis', 'Huang', 'Victor', 'Tony', 'Salvatore', 'Donald', 'Asuka', 'Kenji',
+  
+  // Locations
+  'Liberty City', 'Los Santos', 'San Fierro', 'Las Venturas', 'Vice City',
+  'Alderney', 'Bohan', 'Dukes', 'Broker', 'Algonquin', 'Chinatown',
+  'Little Italy', 'Hove Beach', 'Vinewood', 'Grove Street', 'Ganton',
+  'East Los Santos', 'The Strip', 'Downtown',
+  
+  // Cars
+  'Infernus', 'Banshee', 'Cheetah', 'Comet', 'Stinger', 'Turismo', 'Bullet',
+  'Super GT', 'ZR-350', 'Elegy', 'Jester', 'Sultan', 'Euros', 'Flash',
+  'Uranus', 'Feltzer', 'Stratum', 'Windsor', 'Monroe', 'Peyote', 'Manana',
+  'Hermes', 'Hustler', 'Phoenix', 'Sabre', 'Tampa', 'Virgo',
+  
+  // Organizations
+  'Grove Street', 'Ballas', 'Vagos', 'Varrios', 'Marabunta', 'Rifa',
+  'Da Nang Boys', 'Red Gecko', 'Mountain Cloud', 'Leone Family', 'Forelli',
+  'Sindacco', 'Pavarotti', 'Messina', 'Ancelotti', 'Gambetti', 'Pegorino',
+  
+  // Weapons
+  'AK-47', 'M4', 'Desert Eagle', 'Shotgun', 'Sniper', 'RPG', 'Grenade',
+  'Molotov', 'Baseball Bat', 'Chainsaw', 'Katana', 'Brass Knuckles',
+  
+  // Misc Terms
+  'Grove Street 4 Life', 'Ballin', 'Gangsta', 'OG', 'Respect', 'Reputation',
+  'Wanted Level', 'Police', 'FBI', 'SWAT', 'Army', 'Hospital', 'Ammu-Nation',
+  'Burger Shot', 'Cluckin Bell', 'Pizza Stack', 'Rusty Brown', 'Binco',
+  'Sub Urban', 'Zip', 'Victim', 'Didier Sachs', 'Prolaps', 'Bargain Bin'
+];
+
+// Japanese Katakana Characters for Matrix effect
 const katakanaChars = [
   'ア', 'イ', 'ウ', 'エ', 'オ', 'カ', 'キ', 'ク', 'ケ', 'コ',
   'サ', 'シ', 'ス', 'セ', 'ソ', 'タ', 'チ', 'ツ', 'テ', 'ト',
   'ナ', 'ニ', 'ヌ', 'ネ', 'ノ', 'ハ', 'ヒ', 'フ', 'ヘ', 'ホ',
   'マ', 'ミ', 'ム', 'メ', 'モ', 'ヤ', 'ユ', 'ヨ', 'ラ', 'リ',
-  'ル', 'レ', 'ロ', 'ワ', 'ヲ', 'ン', 'ガ', 'ギ', 'グ', 'ゲ',
-  'ゴ', 'ザ', 'ジ', 'ズ', 'ゼ', 'ゾ', 'ダ', 'ヂ', 'ヅ', 'デ',
-  'ド', 'バ', 'ビ', 'ブ', 'ベ', 'ボ', 'パ', 'ピ', 'プ', 'ペ',
-  'ポ', 'ッ', 'ャ', 'ュ', 'ョ', 'ァ', 'ィ', 'ゥ', 'ェ', 'ォ'
+  'ル', 'レ', 'ロ', 'ワ', 'ヲ', 'ン'
 ];
 
 // Numbers for Matrix effect
 const numbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
+// GTA Easter Eggs - Special elements that occasionally appear
+const gtaEasterEggs = [
+  '💀', '🚗', '💰', '🔫', '💣', '🚁', '🚢', '✈️', '🏆', '⭐',
+  '🔥', '💎', '🎯', '⚡', '🌟', '💥', '🎮', '🎲', '🎪', '🎭',
+  'GTA', 'VICE', 'CITY', 'LOS SANTOS', 'LIBERTY', 'NIKO', 'MICHAEL', 'FRANKLIN', 'TREVOR'
+];
+
 // Combined character set
 const matrixChars = [...katakanaChars, ...numbers];
+
+// GTA Easter Egg Class - Special elements that appear in front
+class GTAEasterEgg {
+  x: number;
+  y: number;
+  speed: number;
+  text: string;
+  opacity: number;
+  scale: number;
+  rotation: number;
+  color: string;
+  lifetime: number;
+  maxLifetime: number;
+
+  constructor(x: number, speed: number) {
+    this.x = x;
+    this.y = -100;
+    this.speed = speed;
+    this.text = gtaEasterEggs[Math.floor(Math.random() * gtaEasterEggs.length)];
+    this.opacity = 1;
+    this.scale = 1;
+    this.rotation = 0;
+    this.lifetime = 0;
+    this.maxLifetime = 3000 + Math.random() * 2000; // 3-5 seconds
+    
+    // Random colors for different easter eggs
+    const colors = [
+      'rgba(255, 215, 0, 1)', // Gold
+      'rgba(255, 165, 0, 1)', // Orange
+      'rgba(255, 0, 0, 1)',   // Red
+      'rgba(0, 255, 255, 1)', // Cyan
+      'rgba(255, 0, 255, 1)', // Magenta
+      'rgba(0, 255, 0, 1)'    // Green
+    ];
+    this.color = colors[Math.floor(Math.random() * colors.length)];
+  }
+
+  update(): boolean {
+    this.y += this.speed;
+    this.lifetime += 16; // Assuming 60fps
+    
+    // Fade out over time
+    this.opacity = Math.max(0, 1 - (this.lifetime / this.maxLifetime));
+    
+    // Gentle rotation
+    this.rotation += 0.02;
+    
+    // Slight scale pulsing
+    this.scale = 1 + Math.sin(this.lifetime * 0.01) * 0.1;
+    
+    return this.lifetime < this.maxLifetime && this.y < window.innerHeight + 100;
+  }
+
+  draw(ctx: CanvasRenderingContext2D, fontSize: number): void {
+    if (this.opacity <= 0) return;
+
+    ctx.save();
+    ctx.globalAlpha = this.opacity;
+    ctx.font = `${fontSize * 1.5}px monospace`;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = this.color;
+    
+    // Add glow effect for easter eggs
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 20;
+    
+    // Apply transformations
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.rotation);
+    ctx.scale(this.scale, this.scale);
+    
+    ctx.fillText(this.text, 0, 0);
+    
+    ctx.restore();
+  }
+}
 
 // Matrix Rain Stream Class
 class MatrixStream {
@@ -43,8 +157,6 @@ class MatrixStream {
   charSpacing: number;
   opacity: number;
   depth: number; // 0 = foreground, 1 = background
-  glowIntensity: number;
-  trailLength: number;
   charIndex: number;
 
   constructor(x: number, speed: number) {
@@ -55,8 +167,6 @@ class MatrixStream {
     this.charSpacing = 20; // Space between characters
     this.opacity = 1;
     this.depth = Math.random(); // Random depth for layered effect
-    this.glowIntensity = Math.random() * 0.5 + 0.3; // Random glow intensity
-    this.trailLength = Math.floor(Math.random() * 8) + 5; // 5-12 character trail
     this.charIndex = 0;
     
     // Generate random katakana and number characters
@@ -68,8 +178,8 @@ class MatrixStream {
   update(): boolean {
     this.y += this.speed;
     
-    // Cycle through characters for the head
-    this.charIndex = (this.charIndex + 0.1) % this.chars.length;
+    // Move the highlighted character down the column (1 character per 0.5 seconds)
+    this.charIndex = (this.charIndex + 0.1) % this.columnHeight;
     
     // Fade out as it falls
     if (this.y > 100) {
@@ -89,7 +199,6 @@ class MatrixStream {
     // Calculate depth-based properties
     const depthOpacity = this.depth < 0.3 ? 1 : 0.3 + (1 - this.depth) * 0.7; // Foreground bright, background dim
     const depthSize = this.depth < 0.3 ? 1 : 0.7 + (1 - this.depth) * 0.3; // Foreground larger, background smaller
-    const depthBlur = this.depth < 0.3 ? 0 : (1 - this.depth) * 8; // Foreground sharp, background blurred
     
     // Draw the column of characters
     for (let i = 0; i < this.columnHeight; i++) {
@@ -106,37 +215,33 @@ class MatrixStream {
       
       ctx.globalAlpha = finalOpacity;
       
-      // Get character (cycling for head, static for body)
-      const char = i === 0 ? this.chars[Math.floor(this.charIndex)] : this.chars[i % this.chars.length];
+      // Get character
+      const char = this.chars[i % this.chars.length];
       
-      // Calculate color intensity based on position and depth
-      const greenIntensity = 0.2 + (charOpacity * 0.8) * depthOpacity;
+      // Check if this character should be highlighted (bright)
+      const isHighlighted = Math.floor(this.charIndex) === i;
+      
+      // Calculate color intensity - highlighted characters are bright, others are dim
+      let greenIntensity;
+      if (isHighlighted) {
+        // Bright highlighted character
+        greenIntensity = 1.0 * depthOpacity;
+      } else {
+        // Dim background characters
+        greenIntensity = (0.1 + (charOpacity * 0.3)) * depthOpacity;
+      }
+      
       const color = `rgba(0, 255, 65, ${greenIntensity})`;
       
       // Apply depth-based scaling
       const scale = depthSize;
       ctx.scale(scale, scale);
       
-      // Apply glow effect
-      if (this.depth < 0.5) { // Only foreground streams get glow
-        ctx.shadowColor = '#00FF41';
-        ctx.shadowBlur = this.glowIntensity * 15;
-        ctx.fillStyle = color;
-        ctx.fillText(char, this.x / scale, charY / scale);
-        
-        // Add trailing blur effect
-        if (i < this.trailLength) {
-          ctx.shadowBlur = this.glowIntensity * 8;
-          ctx.globalAlpha = finalOpacity * 0.3;
-          ctx.fillText(char, this.x / scale, charY / scale);
-        }
-      } else {
-        // Background streams - no glow, just color
-        ctx.shadowColor = 'transparent';
-        ctx.shadowBlur = 0;
-        ctx.fillStyle = color;
-        ctx.fillText(char, this.x / scale, charY / scale);
-      }
+      // No blur effects - crisp and readable
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = color;
+      ctx.fillText(char, this.x / scale, charY / scale);
       
       // Reset scale for next character
       ctx.scale(1 / scale, 1 / scale);
@@ -155,13 +260,19 @@ export default function MatrixRain({
   enabled = true
 }: MatrixRainProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number | undefined>(undefined);
   const streamsRef = useRef<MatrixStream[]>([]);
+  const easterEggsRef = useRef<GTAEasterEgg[]>([]);
   const lastTimeRef = useRef<number>(0);
 
   const createStream = useCallback((x: number) => {
     const streamSpeed = speed + Math.random() * 3; // Varying speeds
     return new MatrixStream(x, streamSpeed);
+  }, [speed]);
+
+  const createEasterEgg = useCallback((x: number) => {
+    const easterEggSpeed = speed * 0.5; // Slower than matrix streams
+    return new GTAEasterEgg(x, easterEggSpeed);
   }, [speed]);
 
   const updateStreams = useCallback(() => {
@@ -175,9 +286,18 @@ export default function MatrixRain({
       streamsRef.current.push(createStream(x));
     }
 
+    // Add new easter eggs (much less frequent)
+    if (Math.random() < density * 0.1) { // 10% of normal density
+      const x = Math.random() * width;
+      easterEggsRef.current.push(createEasterEgg(x));
+    }
+
     // Update existing streams
     streamsRef.current = streamsRef.current.filter(stream => stream.update());
-  }, [width, density, createStream]);
+    
+    // Update existing easter eggs
+    easterEggsRef.current = easterEggsRef.current.filter(easterEgg => easterEgg.update());
+  }, [width, density, createStream, createEasterEgg]);
 
   const drawStreams = useCallback(() => {
     const canvas = canvasRef.current;
@@ -190,9 +310,12 @@ export default function MatrixRain({
     ctx.fillStyle = 'rgba(0, 0, 0, 0.03)';
     ctx.fillRect(0, 0, width, height);
 
-    // Draw streams
+    // Draw matrix streams
     const fontSize = Math.min(width / 80, 18);
     streamsRef.current.forEach(stream => stream.draw(ctx, fontSize));
+    
+    // Draw easter eggs in front
+    easterEggsRef.current.forEach(easterEgg => easterEgg.draw(ctx, fontSize));
   }, [width, height]);
 
   const animate = useCallback(() => {
