@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { registerUser, loginUser, createGuestUser, type User } from '@/lib/auth';
 import { cn } from '@/lib/utils';
+import MatrixRain from '@/components/effects/MatrixRain';
 
 interface AuthPageProps {
   onAuthenticated: (user: User) => void;
@@ -70,21 +71,14 @@ export default function AuthPage({ onAuthenticated }: AuthPageProps) {
       <div className="min-h-screen bg-black flex items-center justify-center px-4 relative overflow-hidden">
         {/* Matrix background */}
         <div className="absolute inset-0 bg-gradient-to-br from-black via-green-950/20 to-black"></div>
-        <div className="absolute inset-0 opacity-10">
-          {Array.from({ length: 50 }).map((_, i) => (
-            <div 
-              key={i}
-              className="absolute text-green-500 text-xs font-mono animate-pulse"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 3}s`
-              }}
-            >
-              {Math.random().toString(36).substring(2, 8)}
-            </div>
-          ))}
-        </div>
+        
+        {/* Matrix Rain Effect */}
+        <MatrixRain 
+          className="opacity-40"
+          speed={1.2}
+          density={0.015}
+          enabled={true}
+        />
         
         <div className="bg-black/90 border border-green-500/30 p-6 sm:p-8 rounded-lg shadow-2xl shadow-green-500/20 max-w-md w-full backdrop-blur-sm relative z-10">
           <div className="text-center mb-6 sm:mb-8">
@@ -134,21 +128,14 @@ export default function AuthPage({ onAuthenticated }: AuthPageProps) {
     <div className="min-h-screen bg-black flex items-center justify-center px-4 relative overflow-hidden">
       {/* Matrix background */}
       <div className="absolute inset-0 bg-gradient-to-br from-black via-green-950/20 to-black"></div>
-      <div className="absolute inset-0 opacity-10">
-        {Array.from({ length: 50 }).map((_, i) => (
-          <div 
-            key={i}
-            className="absolute text-green-500 text-xs font-mono animate-pulse"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 3}s`
-            }}
-          >
-            {Math.random().toString(36).substring(2, 8)}
-          </div>
-        ))}
-      </div>
+      
+      {/* Matrix Rain Effect */}
+      <MatrixRain 
+        className="opacity-40"
+        speed={1.2}
+        density={0.015}
+        enabled={true}
+      />
       
       <div className="bg-black/90 border border-green-500/30 p-6 sm:p-8 rounded-lg shadow-2xl shadow-green-500/20 max-w-md w-full backdrop-blur-sm relative z-10">
         <div className="text-center mb-6 sm:mb-8">
