@@ -88,6 +88,9 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
   const [timeComparison, setTimeComparison] = useState<{ oldTime: number | null; newTime: number; improvement: number | null; isFirstRecord: boolean } | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<boolean>(false);
+  const [showStartup, setShowStartup] = useState<boolean>(true);
+  const [hackingProgress, setHackingProgress] = useState<number>(0);
+  const [hackingText, setHackingText] = useState<string>('INITIALIZING HACK PROTOCOL...');
 
   // Oracle hook for cheat code functionality
   const { oracleActive, resetOracle } = useOracle({
@@ -112,6 +115,54 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
     // Show a random full fingerprint before start
     setFallbackTargetSetId(shuffle(AVAILABLE_SET_IDS)[0]);
   }, []);
+
+  // Startup hacking sequence effect (same flow as numberFinder)
+  useEffect(() => {
+    if (!showStartup) return;
+
+    const hackingSteps = [
+      { text: 'INITIALIZING HACK PROTOCOL...', duration: 800 },
+      { text: 'BYPASSING SECURITY FIREWALL...', duration: 1200 },
+      { text: 'DECRYPTING DATABASE ACCESS...', duration: 1000 },
+      { text: 'INJECTING MALICIOUS PAYLOAD...', duration: 900 },
+      { text: 'ESTABLISHING BACKDOOR CONNECTION...', duration: 1100 },
+      { text: 'HACK COMPLETE - ACCESS GRANTED', duration: 600 }
+    ];
+
+    let currentStep = 0;
+    let currentProgress = 0;
+
+    const updateProgress = () => {
+      if (currentStep >= hackingSteps.length) {
+        setHackingProgress(100);
+        setTimeout(() => {
+          setShowStartup(false);
+        }, 500);
+        return;
+      }
+
+      const step = hackingSteps[currentStep];
+      setHackingText(step.text);
+
+      const stepIncrement = 100 / hackingSteps.length;
+      const progressInterval = setInterval(() => {
+        currentProgress += 2;
+        setHackingProgress(Math.min(currentProgress, (currentStep + 1) * stepIncrement));
+
+        if (currentProgress >= (currentStep + 1) * stepIncrement) {
+          clearInterval(progressInterval);
+          currentStep++;
+          setTimeout(updateProgress, 200);
+        }
+      }, step.duration / (stepIncrement / 2));
+    };
+
+    const startTimeout = setTimeout(updateProgress, 500);
+
+    return () => {
+      clearTimeout(startTimeout);
+    };
+  }, [showStartup]);
 
   const buildRoundGrid = (target: number) => {
     // Use ONLY the target set's pieces: 1..8
@@ -310,6 +361,23 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
       )}
 
       <div className='relative bg-black text-white w-full max-w-[1280px] mx-auto border-2 border-green-500/30 shadow-2xl shadow-green-500/20 rounded-lg overflow-hidden' style={{ width: containerWidth, height: containerWidth * 9/16 }}>
+        {showStartup && (
+          <div className="absolute inset-0 z-30 bg-black/95 backdrop-blur-sm flex items-center justify-center">
+            <div className="text-center max-w-md">
+              <div className="mb-8">
+                <div className="text-green-400 font-mono text-2xl mb-2 animate-pulse">[SYSTEM] BREACH IN PROGRESS</div>
+                <div className="text-green-300 font-mono text-sm mb-6">{hackingText}</div>
+                <div className="w-full bg-gray-800 rounded-full h-3 mb-4 border border-green-500/50">
+                  <div className="bg-gradient-to-r from-green-600 to-green-400 h-3 rounded-full transition-all duration-300 relative overflow-hidden" style={{ width: `${hackingProgress}%` }}>
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
+                  </div>
+                </div>
+                <div className="text-green-400 font-mono text-lg">{Math.round(hackingProgress)}%</div>
+              </div>
+              <div className="text-green-500/50 font-mono text-xs">▄▄▄▄▄ TERMINAL ACCESS ▄▄▄▄▄</div>
+            </div>
+          </div>
+        )}
         <img
           className='ml-auto'
           src={'/casinoFingerprints/status_bar.png'}
@@ -392,7 +460,7 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
           </div>
         </div>
 
-        {isLocked && (
+        {!showStartup && isLocked && (
           <div className="absolute inset-0 z-20 bg-black/80 backdrop-blur-sm flex items-center justify-center">
             <div className="text-center">
               <div className="mb-4 text-green-400 font-mono text-lg animate-pulse">

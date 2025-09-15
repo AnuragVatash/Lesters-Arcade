@@ -91,9 +91,7 @@ export default function Home() {
     return <AuthPage onAuthenticated={handleAuthenticated} />;
   }
 
-  if (currentPage === "leaderboard") {
-    return <LeaderboardPage onBack={handleBackToGames} />;
-  }
+  // Do not early return; render leaderboard as overlay instead
 
   return (
     <div className="bg-black min-h-screen relative overflow-hidden">
@@ -130,6 +128,11 @@ export default function Home() {
         <div className="flex items-center justify-center min-h-[calc(100vh-128px)]">
           {renderGame()}
         </div>
+        {currentPage === "leaderboard" && (
+          <div className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-sm overflow-auto">
+            <LeaderboardPage onBack={handleBackToGames} />
+          </div>
+        )}
       </div>
       <SystemStatus />
     </div>

@@ -66,7 +66,7 @@ export default function Navbar({ activeGame, onGameChange, onLeaderboardClick }:
   };
 
   return (
-    <nav className="w-full bg-black/90 border-b border-green-500/30 backdrop-blur-sm relative">
+    <nav className="w-full bg-black/90 border-b border-green-500/30 backdrop-blur-sm relative z-[2000]">
       <div className="absolute inset-0 bg-gradient-to-r from-green-900/20 via-transparent to-green-900/20"></div>
       <div className="max-w-7xl mx-auto px-4 relative z-10">
         <div className="flex items-center justify-between">
@@ -122,7 +122,7 @@ export default function Navbar({ activeGame, onGameChange, onLeaderboardClick }:
             </button>
 
             {isLeaderboardOpen && (
-              <div className="absolute right-0 mt-1 w-56 bg-black/95 border border-green-500/30 rounded-md shadow-xl shadow-green-500/20 z-50 backdrop-blur-sm">
+              <div className="absolute right-0 mt-1 w-56 bg-black/95 border border-green-500/30 rounded-md shadow-xl shadow-green-500/20 z-[3000] backdrop-blur-sm">
                 <div className="py-1">
                   <button
                     onClick={() => handleLeaderboardItemClick('casino')}
