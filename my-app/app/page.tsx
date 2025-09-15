@@ -6,7 +6,6 @@ import CasinoFingerprint from "@/components/games/casinoFingerprint/CasinoFinger
 import NumberFinder from "@/components/games/numberFinder/numberFinder";
 import Navbar from "@/components/ui/navbar";
 import AuthPage from "@/components/auth/AuthPage";
-import UserDisplay from "@/components/ui/UserDisplay";
 import LeaderboardPage from "@/components/leaderboard/LeaderboardPage";
 import SystemStatus from "@/components/ui/SystemStatus";
 import { getCurrentUser, type User } from "@/lib/auth";
@@ -119,13 +118,14 @@ export default function Home() {
       </div>
 
       <div className="relative z-10">
-        <UserDisplay user={user} onLogout={handleLogout} />
         <Navbar
           activeGame={activeGame}
           onGameChange={setActiveGame}
           onLeaderboardClick={handleLeaderboardClick}
+          user={user}
+          onLogout={handleLogout}
         />
-        <div className="flex items-center justify-center min-h-[calc(100vh-128px)]">
+        <div className="flex items-center justify-center min-h-[calc(100vh-160px)]">
           {renderGame()}
         </div>
         {currentPage === "leaderboard" && (
