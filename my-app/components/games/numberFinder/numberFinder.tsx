@@ -492,7 +492,13 @@ export default function NumberFinder({ user }: NumberFinderProps) {
       {timeComparison && (
         <TimeComparisonDisplay
           comparison={timeComparison}
-          onClose={() => setTimeComparison(null)}
+          onClose={() => {
+            // Close summary and show the Number Finder protocol loading screen again
+            setTimeComparison(null);
+            setShowStartup(true);
+            setHackingProgress(0);
+            setHackingText("INITIALIZING HACK PROTOCOL...");
+          }}
         />
       )}
     </div>

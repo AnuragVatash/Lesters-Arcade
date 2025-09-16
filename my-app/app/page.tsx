@@ -41,7 +41,12 @@ export default function Home() {
   const hasInitializedRef = useRef(false);
 
   useEffect(() => {
-    if (hasInitializedRef.current) return;
+    if (hasInitializedRef.current) {
+      console.log("[Home] Initialization skipped: already initialized", {
+        hasInitialized: hasInitializedRef.current,
+      });
+      return;
+    }
     hasInitializedRef.current = true;
     let loadingTimer: ReturnType<typeof setTimeout> | undefined;
     // Absolute failsafe: Only trigger if initialization takes too long or fails
@@ -52,6 +57,7 @@ export default function Home() {
       setIsLoading(false);
       setLoadingTimeout(true);
     }, 10000); // Increased to 10 seconds to be more reasonable
+    console.log("[Home] Failsafe timer started (10s)");
 
     const initializeApp = async () => {
       console.log("Starting app initialization...");
@@ -59,6 +65,7 @@ export default function Home() {
       try {
         // Check if user is already authenticated
         try {
+          console.log("[Home] Checking current user...");
           const currentUser = getCurrentUser();
           setUser(currentUser);
           console.log("User loaded:", currentUser ? "Authenticated" : "Guest");
@@ -70,6 +77,7 @@ export default function Home() {
         // Generate test data on first load (only if no data exists)
         try {
           if (typeof window !== "undefined") {
+            console.log("[Home] Checking localStorage for leaderboard data...");
             const existingData = localStorage.getItem(
               "__gta_hack_leaderboard__"
             );
@@ -83,7 +91,10 @@ export default function Home() {
         }
 
         // Initialize audio system in background (non-blocking)
-        audio.resumeAudioContext().catch((audioError) => {
+        console.log("[Home] Initializing audio context (non-blocking)...");
+        audio.resumeAudioContext().then(() => {
+          console.log("[Home] Audio context resumed or not needed");
+        }).catch((audioError) => {
           console.warn("Audio initialization failed:", audioError);
         });
 
@@ -91,12 +102,14 @@ export default function Home() {
 
         // Clear failsafe timer since initialization completed successfully
         clearTimeout(failsafeTimer);
+        console.log("[Home] Failsafe timer cleared");
 
         // Complete loading after successful initialization
         loadingTimer = setTimeout(() => {
           setIsLoading(false);
           console.log("Loading completed successfully");
         }, 300);
+        console.log("[Home] Loading completion timer scheduled (300ms)");
       } catch (error) {
         console.error("App initialization failed:", error);
         // Only show warning if there was an actual error
@@ -109,9 +122,31 @@ export default function Home() {
 
     return () => {
       if (loadingTimer) clearTimeout(loadingTimer);
+      if (loadingTimer) console.log("[Home] Cleared loading completion timer");
       clearTimeout(failsafeTimer);
+      console.log("[Home] Cleared failsafe timer (cleanup)");
     };
-  }, [audio]);
+  }, []);
+
+  // Debug: track loading state transitions
+  useEffect(() => {
+    console.log("[Home] isLoading state:", isLoading, {
+      loadingTimeout,
+      hasInitialized: hasInitializedRef.current,
+    });
+  }, [isLoading, loadingTimeout]);
+
+  // Debug: expose simple toggles to window for manual testing
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    (window as any).__homeDebug__ = {
+      setIsLoading,
+      setLoadingTimeout,
+      setUser,
+      snapshot: () => ({ isLoading, loadingTimeout, user, activeGame, currentPage }),
+    };
+    console.log("[Home] Debug handle available on window.__homeDebug__");
+  }, [isLoading, loadingTimeout, user, activeGame, currentPage]);
 
   const handleAuthenticated = (authenticatedUser: User) => {
     setUser(authenticatedUser);
@@ -161,6 +196,10 @@ export default function Home() {
   };
 
   if (isLoading) {
+    console.log("[Home] Rendering loading screen", {
+      isLoading,
+      loadingTimeout,
+    });
     return (
       <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-black via-green-950 to-black opacity-30"></div>
