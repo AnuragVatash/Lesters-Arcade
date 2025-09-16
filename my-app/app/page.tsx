@@ -217,36 +217,7 @@ export default function Home() {
     }
   };
 
-  if (isLoading) {
-    console.log("[Home] Rendering loading screen", {
-      isLoading,
-      loadingTimeout,
-    });
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-black via-green-950 to-black opacity-30"></div>
-        <div className="relative z-10 text-green-400 font-mono">
-          <div className="text-center">
-            <div className="text-2xl font-bold mb-4 tracking-wider">
-              LESTER&apos;S ARCADE
-            </div>
-            <div className="flex items-center justify-center space-x-2 text-sm opacity-70 mb-2">
-              <div className="animate-spin w-3 h-3 border-2 border-green-400 border-t-transparent rounded-full"></div>
-              <span className="animate-pulse">Initializing systems...</span>
-            </div>
-            <div className="text-xs opacity-50">
-              If this takes too long, try refreshing the page
-            </div>
-            <div className="w-32 h-1 bg-green-900/30 rounded-full mx-auto mt-4 overflow-hidden">
-              <div className="h-full bg-green-400 rounded-full animate-pulse w-full"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
+  if (!user && !isLoading) {
     return <AuthPage onAuthenticated={handleAuthenticated} />;
   }
 
@@ -254,6 +225,25 @@ export default function Home() {
 
   return (
     <div className="bg-black min-h-screen relative overflow-hidden">
+      {/* Loading Overlay to prevent CLS */}
+      {isLoading && (
+        <div className="fixed inset-0 z-[10000] bg-black flex items-center justify-center overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-black via-green-950 to-black opacity-30"></div>
+          <div className="relative z-10 text-green-400 font-mono">
+            <div className="text-center">
+              <div className="text-2xl font-bold mb-4 tracking-wider">LESTER&apos;S ARCADE</div>
+              <div className="flex items-center justify-center space-x-2 text-sm opacity-70 mb-2">
+                <div className="animate-spin w-3 h-3 border-2 border-green-400 border-t-transparent rounded-full"></div>
+                <span className="animate-pulse">Initializing systems...</span>
+              </div>
+              <div className="text-xs opacity-50">If this takes too long, try refreshing the page</div>
+              <div className="w-32 h-1 bg-green-900/30 rounded-full mx-auto mt-4 overflow-hidden">
+                <div className="h-full bg-green-400 rounded-full animate-pulse w-full"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Enhanced Matrix-style background */}
       <div className="absolute inset-0 bg-gradient-to-b from-black via-green-950/10 to-black"></div>
       <div className="absolute inset-0 opacity-5">
@@ -359,13 +349,15 @@ export default function Home() {
       )}
 
       <div className="relative z-10">
-        <Navbar
-          activeGame={activeGame}
-          onGameChange={setActiveGame}
-          onLeaderboardClick={handleLeaderboardClick}
-          user={user}
-          onLogout={handleLogout}
-        />
+        {user && (
+          <Navbar
+            activeGame={activeGame}
+            onGameChange={setActiveGame}
+            onLeaderboardClick={handleLeaderboardClick}
+            user={user}
+            onLogout={handleLogout}
+          />
+        )}
         <div className="flex items-center justify-center h-[calc(100vh-120px)] overflow-hidden">
           {renderGame()}
         </div>
