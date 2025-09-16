@@ -8,6 +8,7 @@ import { submitTime as submitLeaderboardTime } from '@/lib/leaderboard';
 import TimeComparisonDisplay from '@/components/ui/TimeComparison';
 import ScanningPopup from '@/components/ui/ScanningPopup';
 import { useOracle } from '@/hooks/useOracle';
+import ParticleSystem from '@/components/effects/ParticleSystem';
 // import { AudioManager } from '@/lib/audioSystem';
 // import { AnimationManager } from '@/lib/animations';
 
@@ -419,7 +420,17 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
   }, [submitSelection]);
 
   return (
-    <div className='flex flex-col items-center justify-center min-h-screen p-2 sm:p-4 gap-4'>
+    <div className='relative flex flex-col items-center justify-center h-full p-2 sm:p-4 gap-4 overflow-hidden'>
+      {/* Matrix Rain Background */}
+      <ParticleSystem
+        width={typeof window !== 'undefined' ? window.innerWidth : 800}
+        height={typeof window !== 'undefined' ? window.innerHeight : 600}
+        particleCount={25}
+        spawnRate={0.1}
+        enabled={true}
+        mode="matrix"
+        className="absolute inset-0 opacity-30 pointer-events-none"
+      />
       {/* Game status indicators - moved outside */}
       {!isLocked && (
         <div className="flex gap-4 mb-2 font-mono">

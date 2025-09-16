@@ -26,6 +26,7 @@ export interface AudioTrack {
   url: string;
   duration: number;
   loop: boolean;
+  volume?: number;
   fadeIn?: number;
   fadeOut?: number;
   category: 'background' | 'menu' | 'game' | 'victory' | 'defeat';

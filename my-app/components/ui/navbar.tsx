@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { type GameType } from '@/lib/leaderboard';
 import { type User, logoutUser } from '@/lib/auth';
+import { useSimpleAudio } from '@/lib/simpleAudio';
 
 type Game = 'casino' | 'cayo' | 'number';
 
@@ -34,6 +35,7 @@ export default function Navbar({ activeGame, onGameChange, onLeaderboardClick, u
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const audio = useSimpleAudio();
 
   const navItems = [
     { id: 'casino' as Game, label: 'CASINO_EXPLOIT.exe' },
@@ -58,17 +60,20 @@ export default function Navbar({ activeGame, onGameChange, onLeaderboardClick, u
   }, []);
 
   const handleLeaderboardItemClick = (gameType?: Game) => {
+    audio.playSound('click');
     setIsLeaderboardOpen(false);
     setIsMobileMenuOpen(false);
     onLeaderboardClick(gameType ? mapGameToGameType(gameType) : undefined);
   };
 
   const handleGameChange = (game: Game) => {
+    audio.playSound('click');
     setIsMobileMenuOpen(false);
     onGameChange(game);
   };
 
   const handleLogout = () => {
+    audio.playSound('logout');
     logoutUser();
     onLogout();
   };

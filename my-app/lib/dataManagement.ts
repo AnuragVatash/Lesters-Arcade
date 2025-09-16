@@ -10,12 +10,10 @@ export interface DataStore {
   data: Map<string, any>;
   version: number;
   lastModified: number;
-  size: number;
   maxSize: number;
   compression: boolean;
   encryption: boolean;
   persistence: boolean;
-  sync: boolean;
   cache: Map<string, CacheEntry>;
   indexes: Map<string, DataIndex>;
   queries: Map<string, Query>;
@@ -305,12 +303,10 @@ export class MemoryDataStore implements DataStore {
   data: Map<string, any>;
   version: number;
   lastModified: number;
-  size: number;
   maxSize: number;
   compression: boolean;
   encryption: boolean;
   persistence: boolean;
-  sync: boolean;
   cache: Map<string, CacheEntry>;
   indexes: Map<string, DataIndex>;
   queries: Map<string, Query>;
@@ -328,12 +324,10 @@ export class MemoryDataStore implements DataStore {
     this.data = new Map();
     this.version = 1;
     this.lastModified = Date.now();
-    this.size = 0;
     this.maxSize = config.maxSize || 100 * 1024 * 1024; // 100MB
     this.compression = config.compression || false;
     this.encryption = config.encryption || false;
     this.persistence = config.persistence || false;
-    this.sync = config.sync || false;
     this.cache = new Map();
     this.indexes = new Map();
     this.queries = new Map();
@@ -364,7 +358,7 @@ export class MemoryDataStore implements DataStore {
     const oldValue = this.data.get(key);
     this.data.set(key, value);
     this.lastModified = Date.now();
-    this.size = this.calculateSize();
+    // Size is calculated dynamically via the size() method
 
     // Update indexes
     for (const index of this.indexes.values()) {
@@ -420,7 +414,7 @@ export class MemoryDataStore implements DataStore {
     
     if (deleted) {
       this.lastModified = Date.now();
-      this.size = this.calculateSize();
+      // Size is calculated dynamically via the size() method
 
       // Update indexes
       for (const index of this.indexes.values()) {
@@ -451,7 +445,7 @@ export class MemoryDataStore implements DataStore {
 
     this.data.clear();
     this.lastModified = Date.now();
-    this.size = 0;
+    // Size is calculated dynamically via the size() method
 
     // Clear indexes
     for (const index of this.indexes.values()) {
@@ -523,7 +517,7 @@ export class MemoryDataStore implements DataStore {
       this.indexes.set(indexData.name, index);
     }
 
-    this.size = this.calculateSize();
+    // Size is calculated dynamically via the size() method
     this.log('Data imported successfully');
   }
 
@@ -668,11 +662,12 @@ export class MemoryDataStore implements DataStore {
     const cacheHits = Array.from(this.cache.values()).reduce((sum, entry) => sum + entry.hits, 0);
     const cacheMisses = this.cache.size;
     const hitRate = cacheHits + cacheMisses > 0 ? cacheHits / (cacheHits + cacheMisses) : 0;
+    const currentSize = this.calculateSize();
 
     return {
       totalKeys: this.data.size,
-      totalSize: this.size,
-      memoryUsage: this.size,
+      totalSize: currentSize,
+      memoryUsage: currentSize,
       cacheHits,
       cacheMisses,
       hitRate,
@@ -779,6 +774,7 @@ export class DataIndexImpl implements DataIndex {
     if (!this.enabled) return new Set();
 
     const indexKey = this.createIndexKey(value);
+    if (!indexKey) return new Set();
     return this.data.get(indexKey) || new Set();
   }
 
@@ -947,8 +943,10 @@ export class DataManagerImpl implements DataManager {
 
   async syncAll(): Promise<void> {
     for (const store of this.stores.values()) {
-      if (store.sync) {
+      try {
         await store.sync();
+      } catch (error) {
+        console.warn(`Failed to sync store ${store.id}:`, error);
       }
     }
     this.log('Synced all stores');
@@ -1084,5 +1082,5 @@ export class DataManagerImpl implements DataManager {
 
 // Export the main classes
 export const DataManager = DataManagerImpl;
-export const MemoryDataStore = MemoryDataStore;
+// MemoryDataStore is already exported above
 export default DataManagerImpl;

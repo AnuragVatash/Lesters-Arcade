@@ -729,7 +729,19 @@ export const useTheme = () => {
 
 // Utility functions
 export const getThemeColor = (theme: ThemeConfig, colorKey: keyof ColorPalette): string => {
-  return theme.colors[colorKey];
+  const color = theme.colors[colorKey];
+  if (typeof color === 'string') {
+    return color;
+  }
+  // Handle gradient objects by returning a CSS gradient string
+  if (color && typeof color === 'object' && 'from' in color && 'to' in color) {
+    const gradient = color as { from: string; to: string; via?: string };
+    if (gradient.via) {
+      return `linear-gradient(135deg, ${gradient.from}, ${gradient.via}, ${gradient.to})`;
+    }
+    return `linear-gradient(135deg, ${gradient.from}, ${gradient.to})`;
+  }
+  return '#000000'; // fallback color
 };
 
 export const createColorVariants = (baseColor: string): Record<string, string> => {

@@ -493,7 +493,9 @@ export class TutorialManager {
         currentStep: 0,
         completedSteps: [],
         startedAt: new Date(),
-        timeSpent: 0
+        timeSpent: 0,
+        hintsUsed: 0,
+        skipsUsed: 0
       });
     }
 

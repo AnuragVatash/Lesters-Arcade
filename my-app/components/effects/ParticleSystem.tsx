@@ -46,6 +46,7 @@ export interface ParticleSystemProps {
   enabled?: boolean;
   className?: string;
   onParticleUpdate?: (particles: Particle[]) => void;
+  mode?: 'default' | 'matrix';
 }
 
 function ParticleSystem({
@@ -55,7 +56,8 @@ function ParticleSystem({
   spawnRate = 0.1,
   enabled = true,
   className,
-  onParticleUpdate
+  onParticleUpdate,
+  mode = 'default'
 }: ParticleSystemProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | undefined>(undefined);
@@ -66,25 +68,53 @@ function ParticleSystem({
   // Generate random particle
   const createParticle = useCallback((config: Partial<ParticleConfig> = {}): Particle => {
     const id = Math.random().toString(36).substr(2, 9);
-    return {
-      id,
-      x: config.x ?? Math.random() * width,
-      y: config.y ?? Math.random() * height,
-      vx: config.vx ?? (Math.random() - 0.5) * 4,
-      vy: config.vy ?? (Math.random() - 0.5) * 4,
-      life: config.life ?? Math.random() * 100 + 50,
-      maxLife: config.life ?? Math.random() * 100 + 50,
-      size: config.size ?? Math.random() * 3 + 1,
-      color: config.color ?? `hsl(${Math.random() * 60 + 120}, 100%, 50%)`,
-      alpha: 1,
-      gravity: config.gravity ?? 0.05,
-      friction: config.friction ?? 0.98,
-      rotation: config.rotation ?? Math.random() * Math.PI * 2,
-      rotationSpeed: config.rotationSpeed ?? (Math.random() - 0.5) * 0.2,
-      scale: config.scale ?? 1,
-      scaleSpeed: config.scaleSpeed ?? (Math.random() - 0.5) * 0.02
-    };
-  }, [width, height]);
+    
+    if (mode === 'matrix') {
+      // Matrix rain particles - vertical columns
+      const columnWidth = 20;
+      const columns = Math.floor(width / columnWidth);
+      const column = Math.floor(Math.random() * columns);
+      
+      return {
+        id,
+        x: config.x ?? (column * columnWidth + Math.random() * columnWidth),
+        y: config.y ?? -20,
+        vx: config.vx ?? 0,
+        vy: config.vy ?? (Math.random() * 2 + 3), // Falling down
+        life: config.life ?? Math.random() * 150 + 100,
+        maxLife: config.life ?? Math.random() * 150 + 100,
+        size: config.size ?? Math.random() * 2 + 8, // Larger for text
+        color: config.color ?? '#00FF41', // Classic Matrix green
+        alpha: 1,
+        gravity: config.gravity ?? 0,
+        friction: config.friction ?? 1,
+        rotation: config.rotation ?? 0,
+        rotationSpeed: config.rotationSpeed ?? 0,
+        scale: config.scale ?? 1,
+        scaleSpeed: config.scaleSpeed ?? 0
+      };
+    } else {
+      // Default particle behavior
+      return {
+        id,
+        x: config.x ?? Math.random() * width,
+        y: config.y ?? Math.random() * height,
+        vx: config.vx ?? (Math.random() - 0.5) * 4,
+        vy: config.vy ?? (Math.random() - 0.5) * 4,
+        life: config.life ?? Math.random() * 100 + 50,
+        maxLife: config.life ?? Math.random() * 100 + 50,
+        size: config.size ?? Math.random() * 4 + 2,
+        color: config.color ?? `hsl(${Math.random() * 60 + 120}, 100%, 70%)`,
+        alpha: 1,
+        gravity: config.gravity ?? 0.05,
+        friction: config.friction ?? 0.98,
+        rotation: config.rotation ?? Math.random() * Math.PI * 2,
+        rotationSpeed: config.rotationSpeed ?? (Math.random() - 0.5) * 0.2,
+        scale: config.scale ?? 1,
+        scaleSpeed: config.scaleSpeed ?? (Math.random() - 0.5) * 0.02
+      };
+    }
+  }, [width, height, mode]);
 
   // Update particle physics
   const updateParticle = useCallback((particle: Particle): Particle => {
@@ -145,10 +175,16 @@ function ParticleSystem({
     }
 
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {
+      setIsAnimating(false);
+      return;
+    }
 
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {
+      setIsAnimating(false);
+      return;
+    }
 
     // Clear canvas
     ctx.clearRect(0, 0, width, height);
@@ -184,16 +220,42 @@ function ParticleSystem({
           ctx.scale(updatedParticle.scale, updatedParticle.scale);
         }
         
-        // Draw particle shape
-        ctx.fillStyle = updatedParticle.color;
-        ctx.beginPath();
-        ctx.arc(0, 0, updatedParticle.size, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Add glow effect
-        ctx.shadowColor = updatedParticle.color;
-        ctx.shadowBlur = 10;
-        ctx.fill();
+        if (mode === 'matrix') {
+          // Draw Matrix characters
+          const characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝ';
+          const char = characters[Math.floor(Math.random() * characters.length)];
+          
+          ctx.font = `${updatedParticle.size}px monospace`;
+          ctx.fillStyle = updatedParticle.color;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          
+          // Add glow effect
+          ctx.shadowColor = updatedParticle.color;
+          ctx.shadowBlur = 10;
+          ctx.fillText(char, 0, 0);
+          
+          // Add extra glow
+          ctx.shadowBlur = 20;
+          ctx.globalAlpha = updatedParticle.alpha * 0.5;
+          ctx.fillText(char, 0, 0);
+        } else {
+          // Draw particle shape (default)
+          ctx.fillStyle = updatedParticle.color;
+          ctx.beginPath();
+          ctx.arc(0, 0, updatedParticle.size, 0, Math.PI * 2);
+          ctx.fill();
+          
+          // Add glow effect for better visibility
+          ctx.shadowColor = updatedParticle.color;
+          ctx.shadowBlur = 15;
+          ctx.fill();
+          
+          // Add extra glow for Matrix theme
+          ctx.shadowBlur = 25;
+          ctx.globalAlpha = updatedParticle.alpha * 0.3;
+          ctx.fill();
+        }
         
         ctx.restore();
         
@@ -214,16 +276,27 @@ function ParticleSystem({
 
   // Start animation
   useEffect(() => {
-    if (enabled) {
-      animate();
-    } else {
+    if (!enabled) {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
       setIsAnimating(false);
+      return;
     }
 
+    // Small delay to ensure canvas is ready
+    const startAnimation = () => {
+      try {
+        animate();
+      } catch (error) {
+        console.warn('Animation start failed:', error);
+      }
+    };
+
+    const timeoutId = setTimeout(startAnimation, 100);
+
     return () => {
+      clearTimeout(timeoutId);
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
@@ -235,8 +308,12 @@ function ParticleSystem({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    canvas.width = width;
-    canvas.height = height;
+    try {
+      canvas.width = width;
+      canvas.height = height;
+    } catch (error) {
+      console.warn('Canvas resize failed:', error);
+    }
   }, [width, height]);
 
   // Add particle manually

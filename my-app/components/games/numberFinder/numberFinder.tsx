@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import TimeComparisonDisplay from '@/components/ui/TimeComparison'; // Assuming path
 import { submitTime as submitLeaderboardTime } from '@/lib/leaderboard'; // Assuming path
 import { useOracle } from '@/hooks/useOracle'; // Assuming path
+import ParticleSystem from '@/components/effects/ParticleSystem';
 
 interface User {
     username: string;
@@ -335,7 +336,17 @@ export default function NumberFinder({ user }: NumberFinderProps) {
     }, [gameStarted, handleSubmit]);
     
     return (
-        <div className="relative">
+        <div className="relative h-full overflow-hidden">
+            {/* Matrix Rain Background */}
+            <ParticleSystem
+                width={typeof window !== 'undefined' ? window.innerWidth : 800}
+                height={typeof window !== 'undefined' ? window.innerHeight : 600}
+                particleCount={25}
+                spawnRate={0.1}
+                enabled={true}
+                mode="matrix"
+                className="absolute inset-0 opacity-30 pointer-events-none"
+            />
             {/* Oracle status indicator */}
             {oracleActive && (
                 <div className="absolute top-0 left-0 z-30 bg-yellow-900/90 border border-yellow-500/50 text-yellow-400 px-3 py-1 rounded-md text-sm font-mono animate-pulse">

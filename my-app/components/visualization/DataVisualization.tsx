@@ -108,7 +108,7 @@ export function LineChart({
   className
 }: LineChartProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number | null>(null);
 
   const drawChart = useCallback(() => {
     const canvas = canvasRef.current;
