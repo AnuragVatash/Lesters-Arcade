@@ -1,13 +1,16 @@
 
 'use client';
 
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { type User } from '@/lib/auth';
 import { submitTime as submitLeaderboardTime } from '@/lib/leaderboard';
 import TimeComparisonDisplay from '@/components/ui/TimeComparison';
 import ScanningPopup from '@/components/ui/ScanningPopup';
 import { useOracle } from '@/hooks/useOracle';
+import ParticleSystem from '@/components/effects/ParticleSystem';
+// import { AudioManager } from '@/lib/audioSystem';
+// import { AnimationManager } from '@/lib/animations';
 
 type Piece = {
   setId: number; // which print set
@@ -43,6 +46,10 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
   const [containerWidth, setContainerWidth] = useState(1280);
   const SCALE = containerWidth / 1920;
   const scaled = (n: number) => Math.round(n * SCALE);
+  
+  // Audio and animation refs (temporarily disabled)
+  // const audioManagerRef = useRef<AudioManager | null>(null);
+  // const animationManagerRef = useRef<AnimationManager | null>(null);
 
   useEffect(() => {
     const updateScale = () => {
@@ -54,6 +61,35 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
     window.addEventListener('resize', updateScale);
     return () => window.removeEventListener('resize', updateScale);
   }, []);
+
+  // Initialize audio and animation systems (temporarily disabled)
+  // useEffect(() => {
+  //   const initializeSystems = async () => {
+  //     try {
+  //       // Initialize animation manager (always works)
+  //       animationManagerRef.current = AnimationManager.getInstance();
+  //       
+  //       // Initialize audio manager (temporarily disabled)
+  //       // try {
+  //       //   audioManagerRef.current = new AudioManager();
+  //       //   await audioManagerRef.current.init();
+  //       //   
+  //       //   // Preload game sounds using Web Audio API
+  //       //   await audioManagerRef.current.createWebAudioClip('pieceClick', { volume: 0.4 });
+  //       //   await audioManagerRef.current.createWebAudioClip('pieceCorrect', { volume: 0.6 });
+  //       //   await audioManagerRef.current.createWebAudioClip('pieceWrong', { volume: 0.5 });
+  //       //   await audioManagerRef.current.createWebAudioClip('gameComplete', { volume: 0.7 });
+  //       //   await audioManagerRef.current.createWebAudioClip('scanning', { volume: 0.4 });
+  //       // } catch (audioError) {
+  //       //   console.warn('Audio system not available:', audioError);
+  //       // }
+  //     } catch (error) {
+  //       console.warn('Failed to initialize systems:', error);
+  //     }
+  //   };
+
+  //   initializeSystems();
+  // }, []);
 
   // Dimensions from dimensions.txt (1920 base)
   const DIMENSIONS = {
@@ -88,6 +124,9 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
   const [timeComparison, setTimeComparison] = useState<{ oldTime: number | null; newTime: number; improvement: number | null; isFirstRecord: boolean } | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<boolean>(false);
+  const [showStartup, setShowStartup] = useState<boolean>(true);
+  const [hackingProgress, setHackingProgress] = useState<number>(0);
+  const [hackingText, setHackingText] = useState<string>('INITIALIZING HACK PROTOCOL...');
 
   // Oracle hook for cheat code functionality
   const { oracleActive, resetOracle } = useOracle({
@@ -112,6 +151,54 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
     // Show a random full fingerprint before start
     setFallbackTargetSetId(shuffle(AVAILABLE_SET_IDS)[0]);
   }, []);
+
+  // Startup hacking sequence effect (same flow as numberFinder)
+  useEffect(() => {
+    if (!showStartup) return;
+
+    const hackingSteps = [
+      { text: 'INITIALIZING HACK PROTOCOL...', duration: 800 },
+      { text: 'BYPASSING SECURITY FIREWALL...', duration: 1200 },
+      { text: 'DECRYPTING DATABASE ACCESS...', duration: 1000 },
+      { text: 'INJECTING MALICIOUS PAYLOAD...', duration: 900 },
+      { text: 'ESTABLISHING BACKDOOR CONNECTION...', duration: 1100 },
+      { text: 'HACK COMPLETE - ACCESS GRANTED', duration: 600 }
+    ];
+
+    let currentStep = 0;
+    let currentProgress = 0;
+
+    const updateProgress = () => {
+      if (currentStep >= hackingSteps.length) {
+        setHackingProgress(100);
+        setTimeout(() => {
+          setShowStartup(false);
+        }, 500);
+        return;
+      }
+
+      const step = hackingSteps[currentStep];
+      setHackingText(step.text);
+
+      const stepIncrement = 100 / hackingSteps.length;
+      const progressInterval = setInterval(() => {
+        currentProgress += 2;
+        setHackingProgress(Math.min(currentProgress, (currentStep + 1) * stepIncrement));
+
+        if (currentProgress >= (currentStep + 1) * stepIncrement) {
+          clearInterval(progressInterval);
+          currentStep++;
+          setTimeout(updateProgress, 200);
+        }
+      }, step.duration / (stepIncrement / 2));
+    };
+
+    const startTimeout = setTimeout(updateProgress, 500);
+
+    return () => {
+      clearTimeout(startTimeout);
+    };
+  }, [showStartup]);
 
   const buildRoundGrid = (target: number) => {
     // Use ONLY the target set's pieces: 1..8
@@ -191,6 +278,20 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
 
   const handleFingerprintClick = (index: number) => {
     if (isLocked || isSubmitting) return;
+
+    // Play click sound (non-blocking) - temporarily disabled
+    // if (audioManagerRef.current) {
+    //   audioManagerRef.current.play('pieceClick').catch(() => {});
+    // }
+
+    // Add click animation - temporarily disabled
+    // if (animationManagerRef.current) {
+    //   const element = document.querySelector(`[data-piece-index="${index}"]`);
+    //   if (element) {
+    //     animationManagerRef.current.createBounceEffect(element as HTMLElement, 20, 200);
+    //   }
+    // }
+    
     const next = new Set(selectedTileIndexes);
     if (next.has(index)) {
       next.delete(index);
@@ -212,6 +313,20 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
       setTimeout(() => setResultMessage(null), 3000);
       return;
     }
+    
+    // Play scanning sound (non-blocking) - temporarily disabled
+    // if (audioManagerRef.current) {
+    //   audioManagerRef.current.play('scanning').catch(() => {});
+    // }
+
+    // Add scanning animation - temporarily disabled
+    // if (animationManagerRef.current) {
+    //   const submitButton = document.querySelector('[data-submit-button]');
+    //   if (submitButton) {
+    //     animationManagerRef.current.createBounceEffect(submitButton as HTMLElement, 20, 500);
+    //   }
+    // }
+    
     setIsSubmitting(true);
     
     // Validate the selection
@@ -226,6 +341,16 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
     setIsScanning(false);
     
     if (isCorrect) {
+      // Play success sound (non-blocking) - temporarily disabled
+      // if (audioManagerRef.current) {
+      //   audioManagerRef.current.play('gameComplete').catch(() => {});
+      // }
+
+      // Add success animation - temporarily disabled
+      // if (animationManagerRef.current) {
+      //   animationManagerRef.current.createGlitchEffect(document.body, 0.1);
+      // }
+      
       // Game completed successfully! Calculate time and submit to leaderboard
       if (gameStartTime) {
         const gameTime = Date.now() - gameStartTime;
@@ -243,6 +368,16 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
       setGameStartTime(null);
       setResultMessage(null);
     } else {
+      // Play error sound (non-blocking) - temporarily disabled
+      // if (audioManagerRef.current) {
+      //   audioManagerRef.current.play('pieceWrong').catch(() => {});
+      // }
+
+      // Add error animation - temporarily disabled
+      // if (animationManagerRef.current) {
+      //   animationManagerRef.current.createWobbleEffect(document.body, 5, 500);
+      // }
+      
       // Incorrect - restart the entire game
       setIsLocked(true);
       setGridPieces([]);
@@ -285,7 +420,17 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
   }, [submitSelection]);
 
   return (
-    <div className='flex flex-col items-center justify-center min-h-screen p-2 sm:p-4 gap-4'>
+    <div className='relative flex flex-col items-center justify-center h-full p-2 sm:p-4 gap-4 overflow-hidden'>
+      {/* Matrix Rain Background */}
+      <ParticleSystem
+        width={typeof window !== 'undefined' ? window.innerWidth : 800}
+        height={typeof window !== 'undefined' ? window.innerHeight : 600}
+        particleCount={25}
+        spawnRate={0.1}
+        enabled={true}
+        mode="matrix"
+        className="absolute inset-0 opacity-30 pointer-events-none"
+      />
       {/* Game status indicators - moved outside */}
       {!isLocked && (
         <div className="flex gap-4 mb-2 font-mono">
@@ -310,6 +455,23 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
       )}
 
       <div className='relative bg-black text-white w-full max-w-[1280px] mx-auto border-2 border-green-500/30 shadow-2xl shadow-green-500/20 rounded-lg overflow-hidden' style={{ width: containerWidth, height: containerWidth * 9/16 }}>
+        {showStartup && (
+          <div className="absolute inset-0 z-30 bg-black/95 backdrop-blur-sm flex items-center justify-center">
+            <div className="text-center max-w-md">
+              <div className="mb-8">
+                <div className="text-green-400 font-mono text-2xl mb-2 animate-pulse">[SYSTEM] BREACH IN PROGRESS</div>
+                <div className="text-green-300 font-mono text-sm mb-6">{hackingText}</div>
+                <div className="w-full bg-gray-800 rounded-full h-3 mb-4 border border-green-500/50">
+                  <div className="bg-gradient-to-r from-green-600 to-green-400 h-3 rounded-full transition-all duration-300 relative overflow-hidden" style={{ width: `${hackingProgress}%` }}>
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
+                  </div>
+                </div>
+                <div className="text-green-400 font-mono text-lg">{Math.round(hackingProgress)}%</div>
+              </div>
+              <div className="text-green-500/50 font-mono text-xs">▄▄▄▄▄ TERMINAL ACCESS ▄▄▄▄▄</div>
+            </div>
+          </div>
+        )}
         <img
           className='ml-auto'
           src={'/casinoFingerprints/status_bar.png'}
@@ -347,6 +509,7 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
                       )}
                       style={{ width: TILE_SIZE, height: TILE_SIZE, marginBottom: 12 }}
                       onClick={() => handleFingerprintClick(index)}
+                      data-piece-index={index}
                     >
                       <img
                         src={tileSrc(piece)}
@@ -392,7 +555,7 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
           </div>
         </div>
 
-        {isLocked && (
+        {!showStartup && isLocked && (
           <div className="absolute inset-0 z-20 bg-black/80 backdrop-blur-sm flex items-center justify-center">
             <div className="text-center">
               <div className="mb-4 text-green-400 font-mono text-lg animate-pulse">
