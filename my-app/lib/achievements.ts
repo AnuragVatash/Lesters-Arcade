@@ -691,22 +691,22 @@ export class AchievementManager {
 
   // Check if achievement requirements are met
   private checkAchievement(achievement: Achievement): boolean {
-    return achievement.requirements.every(requirement => {
-      switch (requirement.type) {
+    return achievement.requirements.every(req => {
+      switch (req.type) {
         case 'time':
-          return this.getStats(requirement.gameType || 'all', 'best-time') <= requirement.target;
+          return this.getStats(req.gameType || 'all', 'best-time') <= req.target;
         case 'score':
-          return this.getStats(requirement.gameType || 'all', 'best-score') >= requirement.target;
+          return this.getStats(req.gameType || 'all', 'best-score') >= req.target;
         case 'accuracy':
-          return this.getStats(requirement.gameType || 'all', 'accuracy') >= requirement.target;
+          return this.getStats(req.gameType || 'all', 'accuracy') >= req.target;
         case 'streak':
-          return this.getStats(requirement.gameType || 'all', 'current-streak') >= requirement.target;
+          return this.getStats(req.gameType || 'all', 'current-streak') >= req.target;
         case 'count':
-          return this.getStats(requirement.gameType || 'all', 'total-completed') >= requirement.target;
+          return this.getStats(req.gameType || 'all', 'total-completed') >= req.target;
         case 'combo':
-          return this.getStats(requirement.gameType || 'all', 'max-combo') >= requirement.target;
+          return this.getStats(req.gameType || 'all', 'max-combo') >= req.target;
         case 'custom':
-          return this.checkCustomRequirement(achievement.id, requirement);
+          return this.checkCustomRequirement(achievement.id, req);
         default:
           return false;
       }
@@ -714,7 +714,7 @@ export class AchievementManager {
   }
 
   // Check custom achievement requirements
-  private checkCustomRequirement(achievementId: string, requirement: AchievementRequirement): boolean {
+  private checkCustomRequirement(achievementId: string, _requirement: AchievementRequirement): boolean {
     switch (achievementId) {
       case 'hacker-legend':
         return this.getUnlockedAchievements().length >= Object.keys(achievements).length - 1; // -1 for this achievement itself

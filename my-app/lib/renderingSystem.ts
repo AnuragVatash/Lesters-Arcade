@@ -168,8 +168,8 @@ export interface CameraEffect {
   duration: number;
   startTime: number;
   endTime: number;
-  startValue: any;
-  endValue: any;
+  startValue: number | Vector2D;
+  endValue: number | Vector2D;
   easing: EasingFunction;
   enabled: boolean;
 }
@@ -309,8 +309,8 @@ export class RendererImpl implements Renderer {
   private layerOrder: string[];
 
   constructor() {
-    this.canvas = null as any;
-    this.context = null as any;
+    this.canvas = null as unknown as HTMLCanvasElement;
+    this.context = null as unknown as CanvasRenderingContext2D;
     this.width = 0;
     this.height = 0;
     this.layers = new Map();
@@ -727,22 +727,35 @@ export class RendererImpl implements Renderer {
 
       // Apply effect based on type
       switch (effect.type) {
-        case 'fade':
-          // Handle fade effect
+        case 'fade': {
+          // Reserved for future use (e.g., overlay alpha)
           break;
-        case 'shake':
-          this.camera.shake.intensity = effect.startValue + (effect.endValue - effect.startValue) * easedProgress;
+        }
+        case 'shake': {
+          const start = typeof effect.startValue === 'number' ? effect.startValue : 0;
+          const end = typeof effect.endValue === 'number' ? effect.endValue : 0;
+          this.camera.shake.intensity = start + (end - start) * easedProgress;
           break;
-        case 'zoom':
-          this.camera.zoom = effect.startValue + (effect.endValue - effect.startValue) * easedProgress;
+        }
+        case 'zoom': {
+          const start = typeof effect.startValue === 'number' ? effect.startValue : this.camera.zoom;
+          const end = typeof effect.endValue === 'number' ? effect.endValue : this.camera.zoom;
+          this.camera.zoom = start + (end - start) * easedProgress;
           break;
-        case 'pan':
-          this.camera.position.x = effect.startValue.x + (effect.endValue.x - effect.startValue.x) * easedProgress;
-          this.camera.position.y = effect.startValue.y + (effect.endValue.y - effect.startValue.y) * easedProgress;
+        }
+        case 'pan': {
+          const start = (effect.startValue as Vector2D) || this.camera.position;
+          const end = (effect.endValue as Vector2D) || this.camera.position;
+          this.camera.position.x = start.x + (end.x - start.x) * easedProgress;
+          this.camera.position.y = start.y + (end.y - start.y) * easedProgress;
           break;
-        case 'rotate':
-          this.camera.rotation = effect.startValue + (effect.endValue - effect.startValue) * easedProgress;
+        }
+        case 'rotate': {
+          const start = typeof effect.startValue === 'number' ? effect.startValue : this.camera.rotation;
+          const end = typeof effect.endValue === 'number' ? effect.endValue : this.camera.rotation;
+          this.camera.rotation = start + (end - start) * easedProgress;
           break;
+        }
       }
 
       return progress < 1;

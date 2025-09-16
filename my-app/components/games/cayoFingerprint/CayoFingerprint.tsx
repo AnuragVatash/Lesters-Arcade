@@ -1,14 +1,13 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
   type CarouselApi,
 } from "@/components/ui/carousel";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { submitTime as submitLeaderboardTime } from "@/lib/leaderboard";
 import TimeComparisonDisplay from "@/components/ui/TimeComparison";
 import ScanningPopup from "@/components/ui/ScanningPopup";
@@ -33,9 +32,7 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
   // Dynamic asset paths
   const getAssetPath = (filename: string) =>
     `/cayoFingerprints/${PRINT_DIR}/${filename}`;
-  const baseImages = Array.from({ length: 8 }, (_, i) =>
-    getAssetPath(`fp${i + 1}.png`)
-  );
+  // removed unused baseImages
   const CONNECTION_TIMEOUT_IMG = `/cayoFingerprints/connection_timeout.png`;
   const CLONE_TARGET_IMG = getAssetPath("clone_target.png");
   const DECIPHERED_IMG = `/cayoFingerprints/decyphered.png`;
@@ -94,7 +91,9 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
   const [scanResult, setScanResult] = useState<boolean>(false);
   const [showStartup, setShowStartup] = useState<boolean>(true);
   const [hackingProgress, setHackingProgress] = useState<number>(0);
-  const [hackingText, setHackingText] = useState<string>('INITIALIZING HACK PROTOCOL...');
+  const [hackingText, setHackingText] = useState<string>(
+    "INITIALIZING HACK PROTOCOL..."
+  );
 
   // Oracle hook for cheat code functionality
   const { oracleActive, resetOracle } = useOracle({
@@ -110,14 +109,14 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
     },
   });
 
-  function shuffle<T>(arr: T[]): T[] {
-    const a = [...arr];
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  }
+  // function shuffle<T>(arr: T[]): T[] {
+  //   const a = [...arr];
+  //   for (let i = a.length - 1; i > 0; i--) {
+  //     const j = Math.floor(Math.random() * (i + 1));
+  //     [a[i], a[j]] = [a[j], a[i]];
+  //   }
+  //   return a;
+  // }
 
   // Remove automatic initialization - this will happen when Start is clicked
 
@@ -158,12 +157,12 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
     if (!showStartup) return;
 
     const hackingSteps = [
-      { text: 'INITIALIZING HACK PROTOCOL...', duration: 800 },
-      { text: 'BYPASSING SECURITY FIREWALL...', duration: 1200 },
-      { text: 'DECRYPTING DATABASE ACCESS...', duration: 1000 },
-      { text: 'INJECTING MALICIOUS PAYLOAD...', duration: 900 },
-      { text: 'ESTABLISHING BACKDOOR CONNECTION...', duration: 1100 },
-      { text: 'HACK COMPLETE - ACCESS GRANTED', duration: 600 }
+      { text: "INITIALIZING HACK PROTOCOL...", duration: 800 },
+      { text: "BYPASSING SECURITY FIREWALL...", duration: 1200 },
+      { text: "DECRYPTING DATABASE ACCESS...", duration: 1000 },
+      { text: "INJECTING MALICIOUS PAYLOAD...", duration: 900 },
+      { text: "ESTABLISHING BACKDOOR CONNECTION...", duration: 1100 },
+      { text: "HACK COMPLETE - ACCESS GRANTED", duration: 600 },
     ];
 
     let currentStep = 0;
@@ -184,7 +183,9 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
       const stepIncrement = 100 / hackingSteps.length;
       const progressInterval = setInterval(() => {
         currentProgress += 2;
-        setHackingProgress(Math.min(currentProgress, (currentStep + 1) * stepIncrement));
+        setHackingProgress(
+          Math.min(currentProgress, (currentStep + 1) * stepIncrement)
+        );
 
         if (currentProgress >= (currentStep + 1) * stepIncrement) {
           clearInterval(progressInterval);
@@ -233,7 +234,7 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     if (!gameStarted) return;
 
     const incorrectRows: number[] = [];
@@ -250,7 +251,7 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
     // Start scanning animation
     setScanResult(allCorrect);
     setIsScanning(true);
-  };
+  }, [gameStarted, selectedIndexes]);
 
   const handleScanComplete = (isCorrect: boolean) => {
     setIsScanning(false);
@@ -302,14 +303,14 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [gameStarted, isScanning]);
+  }, [gameStarted, isScanning, handleSubmit]);
 
   return (
     <div className="relative flex flex-col items-center justify-center h-full p-2 sm:p-4 gap-4 overflow-hidden">
       {/* Matrix Rain Background */}
       <ParticleSystem
-        width={typeof window !== 'undefined' ? window.innerWidth : 800}
-        height={typeof window !== 'undefined' ? window.innerHeight : 600}
+        width={typeof window !== "undefined" ? window.innerWidth : 800}
+        height={typeof window !== "undefined" ? window.innerHeight : 600}
         particleCount={25}
         spawnRate={0.1}
         enabled={true}
@@ -338,16 +339,27 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
           <div className="absolute inset-0 z-30 bg-black/95 backdrop-blur-sm flex items-center justify-center">
             <div className="text-center max-w-md">
               <div className="mb-8">
-                <div className="text-green-400 font-mono text-2xl mb-2 animate-pulse">[SYSTEM] BREACH IN PROGRESS</div>
-                <div className="text-green-300 font-mono text-sm mb-6">{hackingText}</div>
+                <div className="text-green-400 font-mono text-2xl mb-2 animate-pulse">
+                  [SYSTEM] BREACH IN PROGRESS
+                </div>
+                <div className="text-green-300 font-mono text-sm mb-6">
+                  {hackingText}
+                </div>
                 <div className="w-full bg-gray-800 rounded-full h-3 mb-4 border border-green-500/50">
-                  <div className="bg-gradient-to-r from-green-600 to-green-400 h-3 rounded-full transition-all duration-300 relative overflow-hidden" style={{ width: `${hackingProgress}%` }}>
+                  <div
+                    className="bg-gradient-to-r from-green-600 to-green-400 h-3 rounded-full transition-all duration-300 relative overflow-hidden"
+                    style={{ width: `${hackingProgress}%` }}
+                  >
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
                   </div>
                 </div>
-                <div className="text-green-400 font-mono text-lg">{Math.round(hackingProgress)}%</div>
+                <div className="text-green-400 font-mono text-lg">
+                  {Math.round(hackingProgress)}%
+                </div>
               </div>
-              <div className="text-green-500/50 font-mono text-xs">▄▄▄▄▄ TERMINAL ACCESS ▄▄▄▄▄</div>
+              <div className="text-green-500/50 font-mono text-xs">
+                ▄▄▄▄▄ TERMINAL ACCESS ▄▄▄▄▄
+              </div>
             </div>
           </div>
         )}
@@ -439,10 +451,6 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
                       >
                         <CarouselContent className="ml-0">
                           {(carouselImages[rowIndex] || []).map((src, i) => {
-                            const currentSelectedIndex =
-                              selectedIndexes[rowIndex] ?? 0;
-                            const isSelected = i === currentSelectedIndex;
-
                             return (
                               <CarouselItem
                                 key={`${rowIndex}-${i}`}
@@ -451,6 +459,7 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
                                 <div className="flex justify-center w-full">
                                   <img
                                     src={src}
+                                    alt="Fingerprint option"
                                     className="h-auto"
                                     style={{
                                       width: Math.max(

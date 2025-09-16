@@ -7,7 +7,7 @@ export interface DataStore {
   id: string;
   name: string;
   type: DataStoreType;
-  data: Map<string, any>;
+  data: Map<string, unknown>;
   version: number;
   lastModified: number;
   maxSize: number;
@@ -23,22 +23,22 @@ export interface DataStore {
   
   init(): Promise<void>;
   destroy(): void;
-  set(key: string, value: any): Promise<void>;
-  get(key: string): Promise<any>;
+  set(key: string, value: unknown): Promise<void>;
+  get(key: string): Promise<unknown>;
   has(key: string): Promise<boolean>;
   delete(key: string): Promise<boolean>;
   clear(): Promise<void>;
   keys(): Promise<string[]>;
-  values(): Promise<any[]>;
-  entries(): Promise<[string, any][]>;
+  values(): Promise<unknown[]>;
+  entries(): Promise<[string, unknown][]>;
   size(): Promise<number>;
   export(): Promise<string>;
   import(data: string): Promise<void>;
   backup(): Promise<string>;
   restore(backup: string): Promise<void>;
   sync(): Promise<void>;
-  query(query: Query): Promise<any[]>;
-  subscribe(key: string, callback: (value: any) => void): string;
+  query(query: Query): Promise<unknown[]>;
+  subscribe(key: string, callback: (value: unknown) => void): string;
   unsubscribe(id: string): void;
   createIndex(name: string, fields: string[]): DataIndex;
   removeIndex(name: string): void;
@@ -60,7 +60,7 @@ export enum DataStoreType {
 
 export interface CacheEntry {
   key: string;
-  value: any;
+  value: unknown;
   timestamp: number;
   ttl: number;
   hits: number;
@@ -77,10 +77,10 @@ export interface DataIndex {
   data: Map<string, Set<string>>;
   enabled: boolean;
   
-  add(key: string, value: any): void;
+  add(key: string, value: unknown): void;
   remove(key: string): void;
-  update(key: string, oldValue: any, newValue: any): void;
-  find(value: any): Set<string>;
+  update(key: string, oldValue: unknown, newValue: unknown): void;
+  find(value: unknown): Set<string>;
   clear(): void;
   rebuild(): void;
   optimize(): void;
@@ -98,7 +98,7 @@ export interface Query {
   ttl: number;
   enabled: boolean;
   
-  execute(store: DataStore): Promise<any[]>;
+  execute(store: DataStore): Promise<unknown[]>;
   explain(store: DataStore): QueryPlan;
   optimize(store: DataStore): Query;
 }
@@ -106,7 +106,7 @@ export interface Query {
 export interface QueryCondition {
   field: string;
   operator: QueryOperator;
-  value: any;
+  value: unknown;
   logic?: QueryLogic;
 }
 
@@ -171,8 +171,8 @@ export enum QueryStepType {
 export interface Subscription {
   id: string;
   key: string;
-  callback: (value: any) => void;
-  filter?: (value: any) => boolean;
+  callback: (value: unknown) => void;
+  filter?: (value: unknown) => boolean;
   once: boolean;
   created: number;
   lastTriggered: number;
@@ -182,8 +182,8 @@ export interface Subscription {
 export interface DataEvent {
   type: DataEventType;
   key: string;
-  value: any;
-  oldValue?: any;
+  value: unknown;
+  oldValue?: unknown;
   timestamp: number;
   source: string;
 }
@@ -300,7 +300,8 @@ export class MemoryDataStore implements DataStore {
   id: string;
   name: string;
   type: DataStoreType;
-  data: Map<string, any>;
+  data: Map<string, unknown>;
+  
   version: number;
   lastModified: number;
   maxSize: number;
@@ -314,7 +315,7 @@ export class MemoryDataStore implements DataStore {
   events: DataEvent[];
   enabled: boolean;
 
-  private eventListeners: Map<DataEventType, Function[]>;
+  private eventListeners: Map<DataEventType, Array<(event: DataEvent) => void>>;
   private subscriptionIdCounter: number;
 
   constructor(id: string, name: string, config: Partial<DataStore> = {}) {
@@ -352,7 +353,7 @@ export class MemoryDataStore implements DataStore {
     this.eventListeners.clear();
   }
 
-  async set(key: string, value: any): Promise<void> {
+  async set(key: string, value: unknown): Promise<void> {
     if (!this.enabled) return;
 
     const oldValue = this.data.get(key);
@@ -384,7 +385,7 @@ export class MemoryDataStore implements DataStore {
     this.log(`Set key: ${key}`);
   }
 
-  async get(key: string): Promise<any> {
+  async get(key: string): Promise<unknown> {
     if (!this.enabled) return undefined;
 
     const value = this.data.get(key);
@@ -468,11 +469,11 @@ export class MemoryDataStore implements DataStore {
     return Array.from(this.data.keys());
   }
 
-  async values(): Promise<any[]> {
+  async values(): Promise<unknown[]> {
     return Array.from(this.data.values());
   }
 
-  async entries(): Promise<[string, any][]> {
+  async entries(): Promise<[string, unknown][]> {
     return Array.from(this.data.entries());
   }
 
@@ -534,11 +535,11 @@ export class MemoryDataStore implements DataStore {
     this.log('Sync completed');
   }
 
-  async query(query: Query): Promise<any[]> {
+  async query(query: Query): Promise<unknown[]> {
     return query.execute(this);
   }
 
-  subscribe(key: string, callback: (value: any) => void): string {
+  subscribe(key: string, callback: (value: unknown) => void): string {
     const id = `sub_${++this.subscriptionIdCounter}`;
     const subscription: Subscription = {
       id,
@@ -691,7 +692,7 @@ export class MemoryDataStore implements DataStore {
     return size;
   }
 
-  private notifySubscribers(key: string, value: any): void {
+  private notifySubscribers(key: string, value: unknown): void {
     for (const subscription of this.subscriptions.values()) {
       if (subscription.key === key) {
         if (!subscription.filter || subscription.filter(value)) {
@@ -742,7 +743,7 @@ export class DataIndexImpl implements DataIndex {
     this.enabled = true;
   }
 
-  add(key: string, value: any): void {
+  add(key: string, value: unknown): void {
     if (!this.enabled) return;
 
     const indexKey = this.createIndexKey(value);
@@ -765,12 +766,12 @@ export class DataIndexImpl implements DataIndex {
     }
   }
 
-  update(key: string, oldValue: any, newValue: any): void {
+  update(key: string, oldValue: unknown, newValue: unknown): void {
     this.remove(key);
     this.add(key, newValue);
   }
 
-  find(value: any): Set<string> {
+  find(value: unknown): Set<string> {
     if (!this.enabled) return new Set();
 
     const indexKey = this.createIndexKey(value);
@@ -796,7 +797,7 @@ export class DataIndexImpl implements DataIndex {
     }
   }
 
-  private createIndexKey(value: any): string | null {
+  private createIndexKey(value: unknown): string | null {
     if (value === null || value === undefined) {
       return this.sparse ? null : 'null';
     }
@@ -818,15 +819,18 @@ export class DataIndexImpl implements DataIndex {
     return String(value);
   }
 
-  private getFieldValue(value: any, field: string): any {
+  private getFieldValue(value: unknown, field: string): unknown {
     const parts = field.split('.');
-    let current = value;
+    let current: unknown = value;
     for (const part of parts) {
-      if (current && typeof current === 'object' && part in current) {
-        current = current[part];
-      } else {
-        return undefined;
+      if (current !== null && typeof current === 'object') {
+        const record = current as Record<string, unknown>;
+        if (Object.prototype.hasOwnProperty.call(record, part)) {
+          current = record[part];
+          continue;
+        }
       }
+      return undefined;
     }
     return current;
   }
@@ -840,7 +844,7 @@ export class DataManagerImpl implements DataManager {
   events: DataEvent[];
   enabled: boolean;
 
-  private eventListeners: Map<DataEventType, Function[]>;
+  private eventListeners: Map<DataEventType, Array<(event: DataEvent) => void>>;
   private intervals: Map<string, NodeJS.Timeout>;
 
   constructor() {

@@ -323,7 +323,13 @@ export class AudioManager {
     if (typeof window === 'undefined') return;
 
     try {
-      this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      type WindowWithWebkit = Window & typeof globalThis & {
+        webkitAudioContext?: typeof AudioContext;
+      };
+      const W = window as WindowWithWebkit;
+      const Ctor = W.AudioContext ?? W.webkitAudioContext;
+      if (!Ctor) throw new Error('Web Audio API not supported');
+      this.audioContext = new Ctor();
     } catch (error) {
       console.warn('Web Audio API not supported:', error);
     }
@@ -345,7 +351,8 @@ export class AudioManager {
     const saved = localStorage.getItem('lester-arcade-audio-config');
     if (saved) {
       try {
-        return { ...this.getDefaultConfig(), ...JSON.parse(saved) };
+        const parsed = JSON.parse(saved) as Partial<AudioConfig>;
+        return { ...this.getDefaultConfig(), ...parsed };
       } catch (error) {
         console.warn('Failed to parse audio config:', error);
       }
@@ -843,7 +850,16 @@ export const createMusicTrack = (name: string, url: string, config: Partial<Audi
 
 export const generateTone = (frequency: number, duration: number, type: OscillatorType = 'sine'): Promise<void> => {
   return new Promise((resolve) => {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    type WindowWithWebkit = Window & typeof globalThis & {
+      webkitAudioContext?: typeof AudioContext;
+    };
+    const W = window as WindowWithWebkit;
+    const Ctor = W.AudioContext ?? W.webkitAudioContext;
+    if (!Ctor) {
+      resolve();
+      return;
+    }
+    const audioContext = new Ctor();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
     

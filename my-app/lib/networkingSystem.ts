@@ -6,7 +6,7 @@
 export interface NetworkMessage {
   id: string;
   type: string;
-  data: any;
+  data: unknown;
   timestamp: number;
   senderId?: string;
   recipientId?: string;
@@ -48,7 +48,7 @@ export enum ConnectionQuality {
 export interface NetworkEvent {
   type: NetworkEventType;
   connectionId?: string;
-  data?: any;
+  data?: unknown;
   timestamp: number;
 }
 
@@ -155,10 +155,10 @@ export interface HTTPManager extends NetworkManager {
   connect(serverUrl: string, port?: number): Promise<void>;
   disconnect(): void;
   send(message: NetworkMessage): Promise<void>;
-  get(endpoint: string, params?: any): Promise<any>;
-  post(endpoint: string, data?: any): Promise<any>;
-  put(endpoint: string, data?: any): Promise<any>;
-  delete(endpoint: string): Promise<any>;
+  get(endpoint: string, params?: Record<string, unknown>): Promise<unknown>;
+  post(endpoint: string, data?: unknown): Promise<unknown>;
+  put(endpoint: string, data?: unknown): Promise<unknown>;
+  delete(endpoint: string): Promise<unknown>;
   setHeader(key: string, value: string): void;
   removeHeader(key: string): void;
 }
@@ -177,7 +177,7 @@ export class WebSocketManagerImpl implements WebSocketManager {
   reconnectDelay: number;
   reconnectTimer?: NodeJS.Timeout;
 
-  private eventListeners: Map<NetworkEventType, Function[]>;
+  private eventListeners: Map<NetworkEventType, Array<(event: NetworkEvent) => void>>;
   private messageQueue: NetworkMessage[];
   private heartbeatTimer?: NodeJS.Timeout;
   private messageIdCounter: number;
@@ -424,7 +424,8 @@ export class WebSocketManagerImpl implements WebSocketManager {
     }
   }
 
-  handleOpen(event: Event): void {
+  handleOpen(_event: Event): void {
+    void _event;
     this.connected = true;
     this.reconnectAttempts = 0;
 
@@ -481,10 +482,10 @@ export class WebSocketManagerImpl implements WebSocketManager {
     }
   }
 
-  handleError(event: Event): void {
+  handleError(_event: Event): void {
     this.emit({
       type: NetworkEventType.ERROR,
-      data: event,
+      data: _event,
       timestamp: Date.now()
     });
 
@@ -559,7 +560,7 @@ export class WebRTCManagerImpl implements WebRTCManager {
   connectionState: RTCPeerConnectionState;
   iceConnectionState: RTCIceConnectionState;
 
-  private eventListeners: Map<NetworkEventType, Function[]>;
+  private eventListeners: Map<NetworkEventType, Array<(event: NetworkEvent) => void>>;
   private messageQueue: NetworkMessage[];
   private messageIdCounter: number;
 
@@ -598,6 +599,8 @@ export class WebRTCManagerImpl implements WebRTCManager {
   }
 
   async connect(serverUrl: string, port: number = this.config.port): Promise<void> {
+    void serverUrl;
+    void port;
     try {
       this.peerConnection = new RTCPeerConnection({
         iceServers: this.iceServers
@@ -829,7 +832,7 @@ export class WebRTCManagerImpl implements WebRTCManager {
     };
 
     this.peerConnection.ondatachannel = (event) => {
-      const channel = event.channel;
+      this.dataChannel = event.channel;
       this.setupDataChannel();
     };
   }
@@ -898,7 +901,7 @@ export class HTTPManagerImpl implements HTTPManager {
   headers: Map<string, string>;
   timeout: number;
 
-  private eventListeners: Map<NetworkEventType, Function[]>;
+  private eventListeners: Map<NetworkEventType, Array<(event: NetworkEvent) => void>>;
   private messageIdCounter: number;
 
   constructor() {
@@ -1085,11 +1088,12 @@ export class HTTPManagerImpl implements HTTPManager {
     return 0; // HTTP doesn't have packet loss
   }
 
-  async get(endpoint: string, params?: any): Promise<any> {
+  async get(endpoint: string, params?: Record<string, unknown>): Promise<unknown> {
     const url = new URL(`${this.baseUrl}${endpoint}`);
     if (params) {
       Object.keys(params).forEach(key => {
-        url.searchParams.append(key, params[key]);
+        const value = params[key];
+        url.searchParams.append(key, String(value));
       });
     }
 
@@ -1106,7 +1110,7 @@ export class HTTPManagerImpl implements HTTPManager {
     return await response.json();
   }
 
-  async post(endpoint: string, data?: any): Promise<any> {
+  async post(endpoint: string, data?: unknown): Promise<unknown> {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       method: 'POST',
       headers: this.getHeaders(),
@@ -1121,7 +1125,7 @@ export class HTTPManagerImpl implements HTTPManager {
     return await response.json();
   }
 
-  async put(endpoint: string, data?: any): Promise<any> {
+  async put(endpoint: string, data?: unknown): Promise<unknown> {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       method: 'PUT',
       headers: this.getHeaders(),
@@ -1136,7 +1140,7 @@ export class HTTPManagerImpl implements HTTPManager {
     return await response.json();
   }
 
-  async delete(endpoint: string): Promise<any> {
+  async delete(endpoint: string): Promise<unknown> {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       method: 'DELETE',
       headers: this.getHeaders(),

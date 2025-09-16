@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { cn } from '@/lib/utils';
+import React, { useRef, useEffect, useCallback } from "react";
+import { cn } from "@/lib/utils";
 
 // Data Visualization Components for Lester's Arcade
 // This file contains various data visualization components for analytics and monitoring
@@ -23,6 +23,7 @@ export interface LineChartProps {
   height?: number;
   showGrid?: boolean;
   showLabels?: boolean;
+  // animated is currently not used
   animated?: boolean;
   className?: string;
 }
@@ -33,6 +34,7 @@ export interface BarChartProps {
   height?: number;
   horizontal?: boolean;
   showValues?: boolean;
+  // animated is currently not used
   animated?: boolean;
   className?: string;
 }
@@ -43,6 +45,7 @@ export interface PieChartProps {
   height?: number;
   showLegend?: boolean;
   showPercentages?: boolean;
+  // animated is currently not used
   animated?: boolean;
   className?: string;
 }
@@ -74,6 +77,7 @@ export interface GaugeProps {
   height?: number;
   label?: string;
   unit?: string;
+  // animated is currently not used
   animated?: boolean;
   className?: string;
 }
@@ -84,6 +88,7 @@ export interface ProgressRingProps {
   width?: number;
   height?: number;
   label?: string;
+  // animated is currently not used
   animated?: boolean;
   className?: string;
 }
@@ -93,6 +98,7 @@ export interface SparklineProps {
   width?: number;
   height?: number;
   color?: string;
+  // animated is currently not used
   animated?: boolean;
   className?: string;
 }
@@ -104,17 +110,16 @@ export function LineChart({
   height = 200,
   showGrid = true,
   showLabels = true,
-  animated = true,
-  className
+  className,
 }: LineChartProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number | null>(null);
+  // removed unused animationRef
 
   const drawChart = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     canvas.width = width;
@@ -128,22 +133,22 @@ export function LineChart({
     ctx.clearRect(0, 0, width, height);
 
     // Set background
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+    ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
     ctx.fillRect(0, 0, width, height);
 
     if (data.datasets.length === 0) return;
 
     // Find min and max values
-    const allValues = data.datasets.flatMap(dataset => dataset.data);
+    const allValues = data.datasets.flatMap((dataset) => dataset.data);
     const minValue = Math.min(...allValues);
     const maxValue = Math.max(...allValues);
     const valueRange = maxValue - minValue;
 
     // Draw grid
     if (showGrid) {
-      ctx.strokeStyle = 'rgba(0, 255, 65, 0.2)';
+      ctx.strokeStyle = "rgba(0, 255, 65, 0.2)";
       ctx.lineWidth = 1;
-      
+
       // Horizontal grid lines
       for (let i = 0; i <= 5; i++) {
         const y = padding + (chartHeight / 5) * i;
@@ -152,7 +157,7 @@ export function LineChart({
         ctx.lineTo(width - padding, y);
         ctx.stroke();
       }
-      
+
       // Vertical grid lines
       for (let i = 0; i <= data.labels.length; i++) {
         const x = padding + (chartWidth / data.labels.length) * i;
@@ -164,24 +169,26 @@ export function LineChart({
     }
 
     // Draw datasets
-    data.datasets.forEach((dataset, datasetIndex) => {
-      ctx.strokeStyle = dataset.borderColor as string || '#00FF41';
+    data.datasets.forEach((dataset) => {
+      ctx.strokeStyle = (dataset.borderColor as string) || "#00FF41";
       ctx.lineWidth = 2;
-      ctx.fillStyle = dataset.backgroundColor as string || 'rgba(0, 255, 65, 0.1)';
+      ctx.fillStyle =
+        (dataset.backgroundColor as string) || "rgba(0, 255, 65, 0.1)";
 
       ctx.beginPath();
-      
+
       dataset.data.forEach((value, index) => {
         const x = padding + (chartWidth / (data.labels.length - 1)) * index;
-        const y = height - padding - ((value - minValue) / valueRange) * chartHeight;
-        
+        const y =
+          height - padding - ((value - minValue) / valueRange) * chartHeight;
+
         if (index === 0) {
           ctx.moveTo(x, y);
         } else {
           ctx.lineTo(x, y);
         }
       });
-      
+
       ctx.stroke();
 
       // Fill area under line
@@ -193,10 +200,10 @@ export function LineChart({
 
     // Draw labels
     if (showLabels) {
-      ctx.fillStyle = '#00FF41';
-      ctx.font = '12px monospace';
-      ctx.textAlign = 'center';
-      
+      ctx.fillStyle = "#00FF41";
+      ctx.font = "12px monospace";
+      ctx.textAlign = "center";
+
       data.labels.forEach((label, index) => {
         const x = padding + (chartWidth / (data.labels.length - 1)) * index;
         ctx.fillText(label, x, height - padding + 20);
@@ -211,7 +218,7 @@ export function LineChart({
   return (
     <canvas
       ref={canvasRef}
-      className={cn('border border-green-500/30 rounded', className)}
+      className={cn("border border-green-500/30 rounded", className)}
       style={{ width, height }}
     />
   );
@@ -222,10 +229,8 @@ export function BarChart({
   data,
   width = 400,
   height = 200,
-  horizontal = false,
   showValues = true,
-  animated = true,
-  className
+  className,
 }: BarChartProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -233,7 +238,7 @@ export function BarChart({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     canvas.width = width;
@@ -249,7 +254,7 @@ export function BarChart({
     if (data.datasets.length === 0) return;
 
     // Find max value
-    const allValues = data.datasets.flatMap(dataset => dataset.data);
+    const allValues = data.datasets.flatMap((dataset) => dataset.data);
     const maxValue = Math.max(...allValues);
 
     const barWidth = chartWidth / data.labels.length / data.datasets.length;
@@ -258,38 +263,45 @@ export function BarChart({
     data.datasets.forEach((dataset, datasetIndex) => {
       dataset.data.forEach((value, index) => {
         const barHeight = (value / maxValue) * chartHeight;
-        const x = padding + index * (chartWidth / data.labels.length) + datasetIndex * barWidth + barSpacing;
+        const x =
+          padding +
+          index * (chartWidth / data.labels.length) +
+          datasetIndex * barWidth +
+          barSpacing;
         const y = height - padding - barHeight;
 
         // Draw bar
-        ctx.fillStyle = dataset.backgroundColor as string || '#00FF41';
+        ctx.fillStyle = (dataset.backgroundColor as string) || "#00FF41";
         ctx.fillRect(x, y, barWidth - barSpacing, barHeight);
 
         // Draw border
-        ctx.strokeStyle = dataset.borderColor as string || '#00FF41';
+        ctx.strokeStyle = (dataset.borderColor as string) || "#00FF41";
         ctx.lineWidth = 1;
         ctx.strokeRect(x, y, barWidth - barSpacing, barHeight);
 
         // Draw value
         if (showValues) {
-          ctx.fillStyle = '#00FF41';
-          ctx.font = '10px monospace';
-          ctx.textAlign = 'center';
+          ctx.fillStyle = "#00FF41";
+          ctx.font = "10px monospace";
+          ctx.textAlign = "center";
           ctx.fillText(value.toString(), x + barWidth / 2, y - 5);
         }
       });
     });
 
     // Draw labels
-    ctx.fillStyle = '#00FF41';
-    ctx.font = '12px monospace';
-    ctx.textAlign = 'center';
-    
+    ctx.fillStyle = "#00FF41";
+    ctx.font = "12px monospace";
+    ctx.textAlign = "center";
+
     data.labels.forEach((label, index) => {
-      const x = padding + index * (chartWidth / data.labels.length) + chartWidth / data.labels.length / 2;
+      const x =
+        padding +
+        index * (chartWidth / data.labels.length) +
+        chartWidth / data.labels.length / 2;
       ctx.fillText(label, x, height - padding + 20);
     });
-  }, [data, width, height, horizontal, showValues]);
+  }, [data, width, height, showValues]);
 
   useEffect(() => {
     drawChart();
@@ -298,7 +310,7 @@ export function BarChart({
   return (
     <canvas
       ref={canvasRef}
-      className={cn('border border-green-500/30 rounded', className)}
+      className={cn("border border-green-500/30 rounded", className)}
       style={{ width, height }}
     />
   );
@@ -311,8 +323,7 @@ export function PieChart({
   height = 300,
   showLegend = true,
   showPercentages = true,
-  animated = true,
-  className
+  className,
 }: PieChartProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -320,7 +331,7 @@ export function PieChart({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     canvas.width = width;
@@ -342,20 +353,26 @@ export function PieChart({
 
     dataset.data.forEach((value, index) => {
       const sliceAngle = (value / total) * 2 * Math.PI;
-      const color = Array.isArray(dataset.backgroundColor) 
-        ? dataset.backgroundColor[index] 
-        : dataset.backgroundColor || '#00FF41';
+      const color = Array.isArray(dataset.backgroundColor)
+        ? dataset.backgroundColor[index]
+        : dataset.backgroundColor || "#00FF41";
 
       // Draw slice
       ctx.beginPath();
       ctx.moveTo(centerX, centerY);
-      ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
+      ctx.arc(
+        centerX,
+        centerY,
+        radius,
+        currentAngle,
+        currentAngle + sliceAngle
+      );
       ctx.closePath();
       ctx.fillStyle = color;
       ctx.fill();
 
       // Draw border
-      ctx.strokeStyle = '#000000';
+      ctx.strokeStyle = "#000000";
       ctx.lineWidth = 2;
       ctx.stroke();
 
@@ -364,10 +381,10 @@ export function PieChart({
         const labelAngle = currentAngle + sliceAngle / 2;
         const labelX = centerX + Math.cos(labelAngle) * (radius * 0.7);
         const labelY = centerY + Math.sin(labelAngle) * (radius * 0.7);
-        
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 12px monospace';
-        ctx.textAlign = 'center';
+
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "bold 12px monospace";
+        ctx.textAlign = "center";
         ctx.fillText(`${Math.round((value / total) * 100)}%`, labelX, labelY);
       }
 
@@ -378,18 +395,18 @@ export function PieChart({
     if (showLegend) {
       let legendY = 20;
       dataset.data.forEach((value, index) => {
-        const color = Array.isArray(dataset.backgroundColor) 
-          ? dataset.backgroundColor[index] 
-          : dataset.backgroundColor || '#00FF41';
-        
+        const color = Array.isArray(dataset.backgroundColor)
+          ? dataset.backgroundColor[index]
+          : dataset.backgroundColor || "#00FF41";
+
         ctx.fillStyle = color;
         ctx.fillRect(10, legendY, 15, 15);
-        
-        ctx.fillStyle = '#00FF41';
-        ctx.font = '12px monospace';
-        ctx.textAlign = 'left';
+
+        ctx.fillStyle = "#00FF41";
+        ctx.font = "12px monospace";
+        ctx.textAlign = "left";
         ctx.fillText(data.labels[index], 30, legendY + 12);
-        
+
         legendY += 20;
       });
     }
@@ -402,7 +419,7 @@ export function PieChart({
   return (
     <canvas
       ref={canvasRef}
-      className={cn('border border-green-500/30 rounded', className)}
+      className={cn("border border-green-500/30 rounded", className)}
       style={{ width, height }}
     />
   );
@@ -414,10 +431,9 @@ export function Gauge({
   max,
   width = 200,
   height = 200,
-  label = '',
-  unit = '',
-  animated = true,
-  className
+  label = "",
+  unit = "",
+  className,
 }: GaugeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -425,7 +441,7 @@ export function Gauge({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     canvas.width = width;
@@ -441,33 +457,33 @@ export function Gauge({
     // Draw background arc
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, Math.PI, 2 * Math.PI);
-    ctx.strokeStyle = 'rgba(0, 255, 65, 0.2)';
+    ctx.strokeStyle = "rgba(0, 255, 65, 0.2)";
     ctx.lineWidth = 20;
     ctx.stroke();
 
     // Draw value arc
     const percentage = value / max;
-    const endAngle = Math.PI + (percentage * Math.PI);
-    
+    const endAngle = Math.PI + percentage * Math.PI;
+
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, Math.PI, endAngle);
-    ctx.strokeStyle = '#00FF41';
+    ctx.strokeStyle = "#00FF41";
     ctx.lineWidth = 20;
     ctx.stroke();
 
     // Draw value text
-    ctx.fillStyle = '#00FF41';
-    ctx.font = 'bold 24px monospace';
-    ctx.textAlign = 'center';
+    ctx.fillStyle = "#00FF41";
+    ctx.font = "bold 24px monospace";
+    ctx.textAlign = "center";
     ctx.fillText(value.toString(), centerX, centerY - 10);
-    
+
     if (unit) {
-      ctx.font = '14px monospace';
+      ctx.font = "14px monospace";
       ctx.fillText(unit, centerX, centerY + 15);
     }
 
     if (label) {
-      ctx.font = '12px monospace';
+      ctx.font = "12px monospace";
       ctx.fillText(label, centerX, centerY + 35);
     }
   }, [value, max, width, height, label, unit]);
@@ -479,7 +495,7 @@ export function Gauge({
   return (
     <canvas
       ref={canvasRef}
-      className={cn('border border-green-500/30 rounded', className)}
+      className={cn("border border-green-500/30 rounded", className)}
       style={{ width, height }}
     />
   );
@@ -491,9 +507,8 @@ export function ProgressRing({
   max,
   width = 100,
   height = 100,
-  label = '',
-  animated = true,
-  className
+  label = "",
+  className,
 }: ProgressRingProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -501,7 +516,7 @@ export function ProgressRing({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     canvas.width = width;
@@ -517,29 +532,29 @@ export function ProgressRing({
     // Draw background ring
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-    ctx.strokeStyle = 'rgba(0, 255, 65, 0.2)';
+    ctx.strokeStyle = "rgba(0, 255, 65, 0.2)";
     ctx.lineWidth = 8;
     ctx.stroke();
 
     // Draw progress ring
     const percentage = value / max;
     const endAngle = percentage * 2 * Math.PI;
-    
+
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, -Math.PI / 2, -Math.PI / 2 + endAngle);
-    ctx.strokeStyle = '#00FF41';
+    ctx.strokeStyle = "#00FF41";
     ctx.lineWidth = 8;
-    ctx.lineCap = 'round';
+    ctx.lineCap = "round";
     ctx.stroke();
 
     // Draw percentage text
-    ctx.fillStyle = '#00FF41';
-    ctx.font = 'bold 16px monospace';
-    ctx.textAlign = 'center';
+    ctx.fillStyle = "#00FF41";
+    ctx.font = "bold 16px monospace";
+    ctx.textAlign = "center";
     ctx.fillText(`${Math.round(percentage * 100)}%`, centerX, centerY + 5);
 
     if (label) {
-      ctx.font = '10px monospace';
+      ctx.font = "10px monospace";
       ctx.fillText(label, centerX, centerY + 20);
     }
   }, [value, max, width, height, label]);
@@ -551,7 +566,7 @@ export function ProgressRing({
   return (
     <canvas
       ref={canvasRef}
-      className={cn('border border-green-500/30 rounded', className)}
+      className={cn("border border-green-500/30 rounded", className)}
       style={{ width, height }}
     />
   );
@@ -562,9 +577,8 @@ export function Sparkline({
   data,
   width = 200,
   height = 50,
-  color = '#00FF41',
-  animated = true,
-  className
+  color = "#00FF41",
+  className,
 }: SparklineProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -572,7 +586,7 @@ export function Sparkline({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     canvas.width = width;
@@ -597,8 +611,11 @@ export function Sparkline({
 
     data.forEach((value, index) => {
       const x = index * stepX;
-      const y = height - padding - ((value - minValue) / valueRange) * (height - padding * 2);
-      
+      const y =
+        height -
+        padding -
+        ((value - minValue) / valueRange) * (height - padding * 2);
+
       if (index === 0) {
         ctx.moveTo(x, y);
       } else {
@@ -612,7 +629,7 @@ export function Sparkline({
     ctx.lineTo(width - padding, height - padding);
     ctx.lineTo(padding, height - padding);
     ctx.closePath();
-    ctx.fillStyle = color + '20';
+    ctx.fillStyle = color + "20";
     ctx.fill();
   }, [data, width, height, color]);
 
@@ -623,7 +640,7 @@ export function Sparkline({
   return (
     <canvas
       ref={canvasRef}
-      className={cn('border border-green-500/30 rounded', className)}
+      className={cn("border border-green-500/30 rounded", className)}
       style={{ width, height }}
     />
   );
@@ -636,8 +653,7 @@ export function Heatmap({
   width = 400,
   height = 300,
   showValues = true,
-  animated = true,
-  className
+  className,
 }: HeatmapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -645,7 +661,7 @@ export function Heatmap({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     canvas.width = width;
@@ -670,29 +686,29 @@ export function Heatmap({
       row.forEach((value, colIndex) => {
         const x = colIndex * cellWidth;
         const y = rowIndex * cellHeight;
-        
+
         // Calculate color intensity
         const intensity = (value - minValue) / valueRange;
-        const hue = 120 - (intensity * 60); // Green to yellow
+        const hue = 120 - intensity * 60; // Green to yellow
         const saturation = 100;
-        const lightness = 50 + (intensity * 30);
-        
+        const lightness = 50 + intensity * 30;
+
         ctx.fillStyle = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
         ctx.fillRect(x, y, cellWidth, cellHeight);
 
         // Draw border
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.1)";
         ctx.lineWidth = 1;
         ctx.strokeRect(x, y, cellWidth, cellHeight);
 
         // Draw value
         if (showValues) {
-          ctx.fillStyle = intensity > 0.5 ? '#000000' : '#FFFFFF';
-          ctx.font = '10px monospace';
-          ctx.textAlign = 'center';
+          ctx.fillStyle = intensity > 0.5 ? "#000000" : "#FFFFFF";
+          ctx.font = "10px monospace";
+          ctx.textAlign = "center";
           ctx.fillText(
-            value.toString(), 
-            x + cellWidth / 2, 
+            value.toString(),
+            x + cellWidth / 2,
             y + cellHeight / 2 + 3
           );
         }
@@ -700,10 +716,10 @@ export function Heatmap({
     });
 
     // Draw labels
-    ctx.fillStyle = '#00FF41';
-    ctx.font = '12px monospace';
-    ctx.textAlign = 'center';
-    
+    ctx.fillStyle = "#00FF41";
+    ctx.font = "12px monospace";
+    ctx.textAlign = "center";
+
     labels.forEach((label, index) => {
       const x = index * cellWidth + cellWidth / 2;
       ctx.fillText(label, x, height - 5);
@@ -717,7 +733,7 @@ export function Heatmap({
   return (
     <canvas
       ref={canvasRef}
-      className={cn('border border-green-500/30 rounded', className)}
+      className={cn("border border-green-500/30 rounded", className)}
       style={{ width, height }}
     />
   );
@@ -725,58 +741,68 @@ export function Heatmap({
 
 // Dashboard Component
 export function VisualizationDashboard({ className }: { className?: string }) {
-  const [stats, setStats] = useState({
-    totalGames: 0,
-    winRate: 0,
-    averageTime: 0,
-    bestTime: 0
-  });
+  // stats are currently unused in this demo dashboard
 
   // Sample data for demonstration
   const lineChartData: ChartData = {
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    datasets: [{
-      label: 'Games Played',
-      data: [12, 19, 3, 5, 2, 3, 8],
-      backgroundColor: 'rgba(0, 255, 65, 0.1)',
-      borderColor: '#00FF41',
-      borderWidth: 2
-    }]
+    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    datasets: [
+      {
+        label: "Games Played",
+        data: [12, 19, 3, 5, 2, 3, 8],
+        backgroundColor: "rgba(0, 255, 65, 0.1)",
+        borderColor: "#00FF41",
+        borderWidth: 2,
+      },
+    ],
   };
 
   const barChartData: ChartData = {
-    labels: ['Casino', 'Cayo', 'Number'],
-    datasets: [{
-      label: 'Wins',
-      data: [15, 12, 8],
-      backgroundColor: ['#00FF41', '#00CC33', '#00AA22'],
-      borderColor: ['#00FF41', '#00CC33', '#00AA22'],
-      borderWidth: 1
-    }]
+    labels: ["Casino", "Cayo", "Number"],
+    datasets: [
+      {
+        label: "Wins",
+        data: [15, 12, 8],
+        backgroundColor: ["#00FF41", "#00CC33", "#00AA22"],
+        borderColor: ["#00FF41", "#00CC33", "#00AA22"],
+        borderWidth: 1,
+      },
+    ],
   };
 
   const pieChartData: ChartData = {
-    labels: ['Wins', 'Losses', 'Incomplete'],
-    datasets: [{
-      label: 'Game Results',
-      data: [35, 10, 5],
-      backgroundColor: ['#00FF41', '#FF4444', '#FFAA00'],
-      borderColor: ['#00FF41', '#FF4444', '#FFAA00'],
-      borderWidth: 2
-    }]
+    labels: ["Wins", "Losses", "Incomplete"],
+    datasets: [
+      {
+        label: "Game Results",
+        data: [35, 10, 5],
+        backgroundColor: ["#00FF41", "#FF4444", "#FFAA00"],
+        borderColor: ["#00FF41", "#FF4444", "#FFAA00"],
+        borderWidth: 2,
+      },
+    ],
   };
 
   return (
-    <div className={cn('grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6', className)}>
+    <div
+      className={cn(
+        "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6",
+        className
+      )}
+    >
       {/* Line Chart */}
       <div className="bg-gray-900 border border-green-500/30 rounded-lg p-4">
-        <h3 className="text-lg font-mono text-green-400 mb-4">Weekly Activity</h3>
+        <h3 className="text-lg font-mono text-green-400 mb-4">
+          Weekly Activity
+        </h3>
         <LineChart data={lineChartData} width={300} height={200} />
       </div>
 
       {/* Bar Chart */}
       <div className="bg-gray-900 border border-green-500/30 rounded-lg p-4">
-        <h3 className="text-lg font-mono text-green-400 mb-4">Game Performance</h3>
+        <h3 className="text-lg font-mono text-green-400 mb-4">
+          Game Performance
+        </h3>
         <BarChart data={barChartData} width={300} height={200} />
       </div>
 
@@ -788,10 +814,26 @@ export function VisualizationDashboard({ className }: { className?: string }) {
 
       {/* Gauges */}
       <div className="bg-gray-900 border border-green-500/30 rounded-lg p-4">
-        <h3 className="text-lg font-mono text-green-400 mb-4">Performance Metrics</h3>
+        <h3 className="text-lg font-mono text-green-400 mb-4">
+          Performance Metrics
+        </h3>
         <div className="flex justify-around">
-          <Gauge value={75} max={100} width={120} height={120} label="Accuracy" unit="%" />
-          <Gauge value={45} max={60} width={120} height={120} label="Speed" unit="s" />
+          <Gauge
+            value={75}
+            max={100}
+            width={120}
+            height={120}
+            label="Accuracy"
+            unit="%"
+          />
+          <Gauge
+            value={45}
+            max={60}
+            width={120}
+            height={120}
+            label="Speed"
+            unit="s"
+          />
         </div>
       </div>
 
@@ -799,22 +841,45 @@ export function VisualizationDashboard({ className }: { className?: string }) {
       <div className="bg-gray-900 border border-green-500/30 rounded-lg p-4">
         <h3 className="text-lg font-mono text-green-400 mb-4">Achievements</h3>
         <div className="flex justify-around">
-          <ProgressRing value={8} max={10} width={80} height={80} label="Level" />
-          <ProgressRing value={15} max={20} width={80} height={80} label="Streak" />
+          <ProgressRing
+            value={8}
+            max={10}
+            width={80}
+            height={80}
+            label="Level"
+          />
+          <ProgressRing
+            value={15}
+            max={20}
+            width={80}
+            height={80}
+            label="Streak"
+          />
         </div>
       </div>
 
       {/* Sparklines */}
       <div className="bg-gray-900 border border-green-500/30 rounded-lg p-4">
-        <h3 className="text-lg font-mono text-green-400 mb-4">Recent Performance</h3>
+        <h3 className="text-lg font-mono text-green-400 mb-4">
+          Recent Performance
+        </h3>
         <div className="space-y-4">
           <div>
             <p className="text-sm text-gray-300 mb-2">Response Time</p>
-            <Sparkline data={[1.2, 1.5, 1.1, 1.8, 1.3, 1.6, 1.4]} width={250} height={30} />
+            <Sparkline
+              data={[1.2, 1.5, 1.1, 1.8, 1.3, 1.6, 1.4]}
+              width={250}
+              height={30}
+            />
           </div>
           <div>
             <p className="text-sm text-gray-300 mb-2">Accuracy Trend</p>
-            <Sparkline data={[85, 88, 92, 89, 94, 91, 96]} width={250} height={30} color="#00FF41" />
+            <Sparkline
+              data={[85, 88, 92, 89, 94, 91, 96]}
+              width={250}
+              height={30}
+              color="#00FF41"
+            />
           </div>
         </div>
       </div>

@@ -139,7 +139,7 @@ export class AudioManagerImpl implements AudioManager {
   paused: Map<string, AudioClip>;
 
   constructor() {
-    this.context = null as any;
+    this.context = null as unknown as AudioContext;
     this.masterVolume = 1;
     this.masterMuted = false;
     this.mixers = new Map();
@@ -163,7 +163,11 @@ export class AudioManagerImpl implements AudioManager {
 
   async init(): Promise<void> {
     try {
-      this.context = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const AudioContextCtor = window.AudioContext || (window as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!AudioContextCtor) {
+        throw new Error('Web Audio API not supported');
+      }
+      this.context = new AudioContextCtor();
       
       // Resume context if suspended
       if (this.context.state === 'suspended') {
@@ -678,7 +682,8 @@ export class AudioManagerImpl implements AudioManager {
     clip.source.volume = clip.volume * this.masterVolume * volume;
 
     // Apply stereo panning based on horizontal position
-    const pan = Math.max(-1, Math.min(1, dx / this.spatialSettings.maxDistance));
+    const stereoPan = Math.max(-1, Math.min(1, dx / this.spatialSettings.maxDistance));
+    void stereoPan;
     // Note: Stereo panning requires Web Audio API implementation
   }
 
@@ -711,7 +716,11 @@ export class AudioManagerImpl implements AudioManager {
 // Audio Utility Functions
 export class AudioUtils {
   static createTone(frequency: number, duration: number, type: OscillatorType = 'sine'): AudioClip {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const AudioContextCtor = window.AudioContext || (window as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextCtor) {
+      throw new Error('Web Audio API not supported');
+    }
+    const audioContext = new AudioContextCtor();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
     
@@ -730,7 +739,7 @@ export class AudioUtils {
     
     return {
       id: `tone_${frequency}_${Date.now()}`,
-      source: null as any,
+      source: null as unknown as HTMLAudioElement,
       volume: 1,
       pitch: 1,
       loop: false,
@@ -747,7 +756,11 @@ export class AudioUtils {
   }
 
   static createNoise(duration: number, color: 'white' | 'pink' | 'brown' = 'white'): AudioClip {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const AudioContextCtor = window.AudioContext || (window as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextCtor) {
+      throw new Error('Web Audio API not supported');
+    }
+    const audioContext = new AudioContextCtor();
     const bufferSize = audioContext.sampleRate * duration;
     const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
     const data = buffer.getChannelData(0);
@@ -773,7 +786,7 @@ export class AudioUtils {
     
     return {
       id: `noise_${color}_${Date.now()}`,
-      source: null as any,
+      source: null as unknown as HTMLAudioElement,
       volume: 1,
       pitch: 1,
       loop: false,
@@ -790,7 +803,11 @@ export class AudioUtils {
   }
 
   static createChord(frequencies: number[], duration: number, type: OscillatorType = 'sine'): AudioClip {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const AudioContextCtor = window.AudioContext || (window as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextCtor) {
+      throw new Error('Web Audio API not supported');
+    }
+    const audioContext = new AudioContextCtor();
     const gainNode = audioContext.createGain();
     
     gainNode.gain.setValueAtTime(0, audioContext.currentTime);
@@ -810,7 +827,7 @@ export class AudioUtils {
     
     return {
       id: `chord_${frequencies.join('_')}_${Date.now()}`,
-      source: null as any,
+      source: null as unknown as HTMLAudioElement,
       volume: 1,
       pitch: 1,
       loop: false,
@@ -827,7 +844,11 @@ export class AudioUtils {
   }
 
   static createSweep(startFreq: number, endFreq: number, duration: number, type: OscillatorType = 'sine'): AudioClip {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const AudioContextCtor = window.AudioContext || (window as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextCtor) {
+      throw new Error('Web Audio API not supported');
+    }
+    const audioContext = new AudioContextCtor();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
     
@@ -847,7 +868,7 @@ export class AudioUtils {
     
     return {
       id: `sweep_${startFreq}_${endFreq}_${Date.now()}`,
-      source: null as any,
+      source: null as unknown as HTMLAudioElement,
       volume: 1,
       pitch: 1,
       loop: false,

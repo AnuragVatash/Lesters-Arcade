@@ -1,10 +1,11 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { cn } from '@/lib/utils';
-import { useTheme } from '@/lib/themes';
-import { useAudio } from '@/lib/audio';
-import { animationManager } from '@/lib/animations';
+import React, { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
+import { useTheme } from "@/lib/themes";
+import { useAudio } from "@/lib/audio";
+import { animationManager } from "@/lib/animations";
+import { Slider } from "@/components/ui/slider";
 
 interface SettingsPageProps {
   onClose: () => void;
@@ -17,30 +18,30 @@ interface SettingsConfig {
   musicVolume: number;
   voiceVolume: number;
   muted: boolean;
-  
+
   // Visual Settings
   theme: string;
   animations: boolean;
   particles: boolean;
   matrixRain: boolean;
   glowEffects: boolean;
-  
+
   // Game Settings
-  difficulty: 'easy' | 'normal' | 'hard' | 'expert';
+  difficulty: "easy" | "normal" | "hard" | "expert";
   autoSave: boolean;
   showTutorials: boolean;
   keyboardShortcuts: boolean;
-  
+
   // Performance Settings
-  quality: 'low' | 'medium' | 'high' | 'ultra';
+  quality: "low" | "medium" | "high" | "ultra";
   fps: number;
   vsync: boolean;
-  
+
   // Accessibility Settings
   highContrast: boolean;
   largeText: boolean;
   screenReader: boolean;
-  colorBlindMode: 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia';
+  colorBlindMode: "none" | "protanopia" | "deuteranopia" | "tritanopia";
 }
 
 const defaultSettings: SettingsConfig = {
@@ -49,51 +50,52 @@ const defaultSettings: SettingsConfig = {
   musicVolume: 0.6,
   voiceVolume: 0.7,
   muted: false,
-  theme: 'matrix',
+  theme: "matrix",
   animations: true,
   particles: true,
   matrixRain: true,
   glowEffects: true,
-  difficulty: 'normal',
+  difficulty: "normal",
   autoSave: true,
   showTutorials: true,
   keyboardShortcuts: true,
-  quality: 'high',
+  quality: "high",
   fps: 60,
   vsync: true,
   highContrast: false,
   largeText: false,
   screenReader: false,
-  colorBlindMode: 'none'
+  colorBlindMode: "none",
 };
 
 export default function SettingsPage({ onClose }: SettingsPageProps) {
   const [settings, setSettings] = useState<SettingsConfig>(defaultSettings);
-  const [activeTab, setActiveTab] = useState<'audio' | 'visual' | 'game' | 'performance' | 'accessibility'>('audio');
+  const [activeTab, setActiveTab] = useState<
+    "audio" | "visual" | "game" | "performance" | "accessibility"
+  >("audio");
   const [hasChanges, setHasChanges] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  
-  const { currentTheme, availableThemes, setTheme } = useTheme();
-  const { 
-    setMasterVolume, 
-    setSFXVolume, 
-    setMusicVolume, 
-    setVoiceVolume, 
+
+  const { availableThemes, setTheme } = useTheme();
+  const {
+    setMasterVolume,
+    setSFXVolume,
+    setMusicVolume,
+    setVoiceVolume,
     setMuted,
-    getConfig: getAudioConfig 
   } = useAudio();
 
   // Load settings on mount
   useEffect(() => {
     const loadSettings = () => {
       try {
-        const saved = localStorage.getItem('lester-arcade-settings');
+        const saved = localStorage.getItem("lester-arcade-settings");
         if (saved) {
           const parsedSettings = JSON.parse(saved);
           setSettings({ ...defaultSettings, ...parsedSettings });
         }
       } catch (error) {
-        console.warn('Failed to load settings:', error);
+        console.warn("Failed to load settings:", error);
       }
       setIsLoading(false);
     };
@@ -104,51 +106,54 @@ export default function SettingsPage({ onClose }: SettingsPageProps) {
   // Save settings to localStorage
   const saveSettings = (newSettings: SettingsConfig) => {
     try {
-      localStorage.setItem('lester-arcade-settings', JSON.stringify(newSettings));
+      localStorage.setItem(
+        "lester-arcade-settings",
+        JSON.stringify(newSettings)
+      );
       setHasChanges(false);
     } catch (error) {
-      console.error('Failed to save settings:', error);
+      console.error("Failed to save settings:", error);
     }
   };
 
   // Update setting
   const updateSetting = <K extends keyof SettingsConfig>(
-    key: K, 
+    key: K,
     value: SettingsConfig[K]
   ) => {
     const newSettings = { ...settings, [key]: value };
     setSettings(newSettings);
     setHasChanges(true);
-    
+
     // Apply changes immediately for certain settings
     applySettingChange(key, value);
   };
 
   // Apply setting change immediately
   const applySettingChange = <K extends keyof SettingsConfig>(
-    key: K, 
+    key: K,
     value: SettingsConfig[K]
   ) => {
     switch (key) {
-      case 'masterVolume':
+      case "masterVolume":
         setMasterVolume(value as number);
         break;
-      case 'sfxVolume':
+      case "sfxVolume":
         setSFXVolume(value as number);
         break;
-      case 'musicVolume':
+      case "musicVolume":
         setMusicVolume(value as number);
         break;
-      case 'voiceVolume':
+      case "voiceVolume":
         setVoiceVolume(value as number);
         break;
-      case 'muted':
+      case "muted":
         setMuted(value as boolean);
         break;
-      case 'theme':
+      case "theme":
         setTheme(value as string);
         break;
-      case 'animations':
+      case "animations":
         if (!(value as boolean)) {
           animationManager.stopAllAnimations();
         }
@@ -176,11 +181,11 @@ export default function SettingsPage({ onClose }: SettingsPageProps) {
 
   // Tab configuration
   const tabs = [
-    { id: 'audio', label: 'Audio', icon: '🔊' },
-    { id: 'visual', label: 'Visual', icon: '🎨' },
-    { id: 'game', label: 'Game', icon: '🎮' },
-    { id: 'performance', label: 'Performance', icon: '⚡' },
-    { id: 'accessibility', label: 'Accessibility', icon: '♿' }
+    { id: "audio", label: "Audio", icon: "🔊" },
+    { id: "visual", label: "Visual", icon: "🎨" },
+    { id: "game", label: "Game", icon: "🎮" },
+    { id: "performance", label: "Performance", icon: "⚡" },
+    { id: "accessibility", label: "Accessibility", icon: "♿" },
   ] as const;
 
   if (isLoading) {
@@ -225,10 +230,10 @@ export default function SettingsPage({ onClose }: SettingsPageProps) {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={cn(
-                    'w-full text-left px-4 py-3 rounded-md font-mono text-sm transition-all duration-200',
+                    "w-full text-left px-4 py-3 rounded-md font-mono text-sm transition-all duration-200",
                     activeTab === tab.id
-                      ? 'bg-green-900/30 text-green-400 border border-green-500/50'
-                      : 'text-gray-300 hover:text-green-400 hover:bg-green-900/20'
+                      ? "bg-green-900/30 text-green-400 border border-green-500/50"
+                      : "text-gray-300 hover:text-green-400 hover:bg-green-900/20"
                   )}
                 >
                   <span className="mr-2">{tab.icon}</span>
@@ -240,25 +245,25 @@ export default function SettingsPage({ onClose }: SettingsPageProps) {
 
           {/* Content */}
           <div className="flex-1 p-6 overflow-y-auto">
-            {activeTab === 'audio' && (
+            {activeTab === "audio" && (
               <div className="space-y-6">
                 <h3 className="text-xl font-mono font-bold text-green-400 mb-4">
                   [AUDIO] SOUND CONFIGURATION
                 </h3>
-                
+
                 {/* Master Volume */}
                 <div className="space-y-2">
                   <label className="block text-sm font-mono text-gray-300">
                     Master Volume: {Math.round(settings.masterVolume * 100)}%
                   </label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    value={settings.masterVolume}
-                    onChange={(e) => updateSetting('masterVolume', parseFloat(e.target.value))}
-                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                  <Slider
+                    value={[Math.round(settings.masterVolume * 100)]}
+                    max={100}
+                    step={1}
+                    onValueChange={(vals) =>
+                      updateSetting("masterVolume", vals[0] / 100)
+                    }
+                    className="w-full"
                   />
                 </div>
 
@@ -267,14 +272,14 @@ export default function SettingsPage({ onClose }: SettingsPageProps) {
                   <label className="block text-sm font-mono text-gray-300">
                     SFX Volume: {Math.round(settings.sfxVolume * 100)}%
                   </label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    value={settings.sfxVolume}
-                    onChange={(e) => updateSetting('sfxVolume', parseFloat(e.target.value))}
-                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                  <Slider
+                    value={[Math.round(settings.sfxVolume * 100)]}
+                    max={100}
+                    step={1}
+                    onValueChange={(vals) =>
+                      updateSetting("sfxVolume", vals[0] / 100)
+                    }
+                    className="w-full"
                   />
                 </div>
 
@@ -283,14 +288,14 @@ export default function SettingsPage({ onClose }: SettingsPageProps) {
                   <label className="block text-sm font-mono text-gray-300">
                     Music Volume: {Math.round(settings.musicVolume * 100)}%
                   </label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    value={settings.musicVolume}
-                    onChange={(e) => updateSetting('musicVolume', parseFloat(e.target.value))}
-                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                  <Slider
+                    value={[Math.round(settings.musicVolume * 100)]}
+                    max={100}
+                    step={1}
+                    onValueChange={(vals) =>
+                      updateSetting("musicVolume", vals[0] / 100)
+                    }
+                    className="w-full"
                   />
                 </div>
 
@@ -299,14 +304,14 @@ export default function SettingsPage({ onClose }: SettingsPageProps) {
                   <label className="block text-sm font-mono text-gray-300">
                     Voice Volume: {Math.round(settings.voiceVolume * 100)}%
                   </label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    value={settings.voiceVolume}
-                    onChange={(e) => updateSetting('voiceVolume', parseFloat(e.target.value))}
-                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                  <Slider
+                    value={[Math.round(settings.voiceVolume * 100)]}
+                    max={100}
+                    step={1}
+                    onValueChange={(vals) =>
+                      updateSetting("voiceVolume", vals[0] / 100)
+                    }
+                    className="w-full"
                   />
                 </div>
 
@@ -316,22 +321,25 @@ export default function SettingsPage({ onClose }: SettingsPageProps) {
                     type="checkbox"
                     id="muted"
                     checked={settings.muted}
-                    onChange={(e) => updateSetting('muted', e.target.checked)}
+                    onChange={(e) => updateSetting("muted", e.target.checked)}
                     className="w-4 h-4 text-green-400 bg-gray-700 border-gray-600 rounded focus:ring-green-500"
                   />
-                  <label htmlFor="muted" className="text-sm font-mono text-gray-300">
+                  <label
+                    htmlFor="muted"
+                    className="text-sm font-mono text-gray-300"
+                  >
                     Mute All Audio
                   </label>
                 </div>
               </div>
             )}
 
-            {activeTab === 'visual' && (
+            {activeTab === "visual" && (
               <div className="space-y-6">
                 <h3 className="text-xl font-mono font-bold text-green-400 mb-4">
                   [VISUAL] APPEARANCE CONFIGURATION
                 </h3>
-                
+
                 {/* Theme Selection */}
                 <div className="space-y-3">
                   <label className="block text-sm font-mono text-gray-300">
@@ -341,12 +349,12 @@ export default function SettingsPage({ onClose }: SettingsPageProps) {
                     {availableThemes.map((theme) => (
                       <button
                         key={theme.name}
-                        onClick={() => updateSetting('theme', theme.name)}
+                        onClick={() => updateSetting("theme", theme.name)}
                         className={cn(
-                          'p-3 rounded-md border text-left transition-all duration-200',
+                          "p-3 rounded-md border text-left transition-all duration-200",
                           settings.theme === theme.name
-                            ? 'border-green-500 bg-green-900/30 text-green-400'
-                            : 'border-gray-600 text-gray-300 hover:border-green-500 hover:text-green-400'
+                            ? "border-green-500 bg-green-900/30 text-green-400"
+                            : "border-gray-600 text-gray-300 hover:border-green-500 hover:text-green-400"
                         )}
                       >
                         <div className="font-mono text-sm font-medium">
@@ -365,17 +373,22 @@ export default function SettingsPage({ onClose }: SettingsPageProps) {
                   <h4 className="text-lg font-mono font-semibold text-green-400">
                     Visual Effects
                   </h4>
-                  
+
                   <div className="space-y-3">
                     <div className="flex items-center space-x-3">
                       <input
                         type="checkbox"
                         id="animations"
                         checked={settings.animations}
-                        onChange={(e) => updateSetting('animations', e.target.checked)}
+                        onChange={(e) =>
+                          updateSetting("animations", e.target.checked)
+                        }
                         className="w-4 h-4 text-green-400 bg-gray-700 border-gray-600 rounded focus:ring-green-500"
                       />
-                      <label htmlFor="animations" className="text-sm font-mono text-gray-300">
+                      <label
+                        htmlFor="animations"
+                        className="text-sm font-mono text-gray-300"
+                      >
                         Enable Animations
                       </label>
                     </div>
@@ -385,10 +398,15 @@ export default function SettingsPage({ onClose }: SettingsPageProps) {
                         type="checkbox"
                         id="particles"
                         checked={settings.particles}
-                        onChange={(e) => updateSetting('particles', e.target.checked)}
+                        onChange={(e) =>
+                          updateSetting("particles", e.target.checked)
+                        }
                         className="w-4 h-4 text-green-400 bg-gray-700 border-gray-600 rounded focus:ring-green-500"
                       />
-                      <label htmlFor="particles" className="text-sm font-mono text-gray-300">
+                      <label
+                        htmlFor="particles"
+                        className="text-sm font-mono text-gray-300"
+                      >
                         Particle Effects
                       </label>
                     </div>
@@ -398,10 +416,15 @@ export default function SettingsPage({ onClose }: SettingsPageProps) {
                         type="checkbox"
                         id="matrixRain"
                         checked={settings.matrixRain}
-                        onChange={(e) => updateSetting('matrixRain', e.target.checked)}
+                        onChange={(e) =>
+                          updateSetting("matrixRain", e.target.checked)
+                        }
                         className="w-4 h-4 text-green-400 bg-gray-700 border-gray-600 rounded focus:ring-green-500"
                       />
-                      <label htmlFor="matrixRain" className="text-sm font-mono text-gray-300">
+                      <label
+                        htmlFor="matrixRain"
+                        className="text-sm font-mono text-gray-300"
+                      >
                         Matrix Rain Effect
                       </label>
                     </div>
@@ -411,10 +434,15 @@ export default function SettingsPage({ onClose }: SettingsPageProps) {
                         type="checkbox"
                         id="glowEffects"
                         checked={settings.glowEffects}
-                        onChange={(e) => updateSetting('glowEffects', e.target.checked)}
+                        onChange={(e) =>
+                          updateSetting("glowEffects", e.target.checked)
+                        }
                         className="w-4 h-4 text-green-400 bg-gray-700 border-gray-600 rounded focus:ring-green-500"
                       />
-                      <label htmlFor="glowEffects" className="text-sm font-mono text-gray-300">
+                      <label
+                        htmlFor="glowEffects"
+                        className="text-sm font-mono text-gray-300"
+                      >
                         Glow Effects
                       </label>
                     </div>
@@ -423,12 +451,12 @@ export default function SettingsPage({ onClose }: SettingsPageProps) {
               </div>
             )}
 
-            {activeTab === 'game' && (
+            {activeTab === "game" && (
               <div className="space-y-6">
                 <h3 className="text-xl font-mono font-bold text-green-400 mb-4">
                   [GAME] GAMEPLAY CONFIGURATION
                 </h3>
-                
+
                 {/* Difficulty */}
                 <div className="space-y-3">
                   <label className="block text-sm font-mono text-gray-300">
@@ -436,7 +464,12 @@ export default function SettingsPage({ onClose }: SettingsPageProps) {
                   </label>
                   <select
                     value={settings.difficulty}
-                    onChange={(e) => updateSetting('difficulty', e.target.value as SettingsConfig['difficulty'])}
+                    onChange={(e) =>
+                      updateSetting(
+                        "difficulty",
+                        e.target.value as SettingsConfig["difficulty"]
+                      )
+                    }
                     className="w-full p-3 bg-gray-700 border border-gray-600 rounded-md text-green-400 font-mono focus:border-green-500 focus:ring-1 focus:ring-green-500"
                   >
                     <option value="easy">Easy</option>
@@ -451,17 +484,22 @@ export default function SettingsPage({ onClose }: SettingsPageProps) {
                   <h4 className="text-lg font-mono font-semibold text-green-400">
                     Game Options
                   </h4>
-                  
+
                   <div className="space-y-3">
                     <div className="flex items-center space-x-3">
                       <input
                         type="checkbox"
                         id="autoSave"
                         checked={settings.autoSave}
-                        onChange={(e) => updateSetting('autoSave', e.target.checked)}
+                        onChange={(e) =>
+                          updateSetting("autoSave", e.target.checked)
+                        }
                         className="w-4 h-4 text-green-400 bg-gray-700 border-gray-600 rounded focus:ring-green-500"
                       />
-                      <label htmlFor="autoSave" className="text-sm font-mono text-gray-300">
+                      <label
+                        htmlFor="autoSave"
+                        className="text-sm font-mono text-gray-300"
+                      >
                         Auto Save Progress
                       </label>
                     </div>
@@ -471,10 +509,15 @@ export default function SettingsPage({ onClose }: SettingsPageProps) {
                         type="checkbox"
                         id="showTutorials"
                         checked={settings.showTutorials}
-                        onChange={(e) => updateSetting('showTutorials', e.target.checked)}
+                        onChange={(e) =>
+                          updateSetting("showTutorials", e.target.checked)
+                        }
                         className="w-4 h-4 text-green-400 bg-gray-700 border-gray-600 rounded focus:ring-green-500"
                       />
-                      <label htmlFor="showTutorials" className="text-sm font-mono text-gray-300">
+                      <label
+                        htmlFor="showTutorials"
+                        className="text-sm font-mono text-gray-300"
+                      >
                         Show Tutorials
                       </label>
                     </div>
@@ -484,10 +527,15 @@ export default function SettingsPage({ onClose }: SettingsPageProps) {
                         type="checkbox"
                         id="keyboardShortcuts"
                         checked={settings.keyboardShortcuts}
-                        onChange={(e) => updateSetting('keyboardShortcuts', e.target.checked)}
+                        onChange={(e) =>
+                          updateSetting("keyboardShortcuts", e.target.checked)
+                        }
                         className="w-4 h-4 text-green-400 bg-gray-700 border-gray-600 rounded focus:ring-green-500"
                       />
-                      <label htmlFor="keyboardShortcuts" className="text-sm font-mono text-gray-300">
+                      <label
+                        htmlFor="keyboardShortcuts"
+                        className="text-sm font-mono text-gray-300"
+                      >
                         Enable Keyboard Shortcuts
                       </label>
                     </div>
@@ -496,12 +544,12 @@ export default function SettingsPage({ onClose }: SettingsPageProps) {
               </div>
             )}
 
-            {activeTab === 'performance' && (
+            {activeTab === "performance" && (
               <div className="space-y-6">
                 <h3 className="text-xl font-mono font-bold text-green-400 mb-4">
                   [PERFORMANCE] SYSTEM OPTIMIZATION
                 </h3>
-                
+
                 {/* Quality Settings */}
                 <div className="space-y-3">
                   <label className="block text-sm font-mono text-gray-300">
@@ -509,7 +557,12 @@ export default function SettingsPage({ onClose }: SettingsPageProps) {
                   </label>
                   <select
                     value={settings.quality}
-                    onChange={(e) => updateSetting('quality', e.target.value as SettingsConfig['quality'])}
+                    onChange={(e) =>
+                      updateSetting(
+                        "quality",
+                        e.target.value as SettingsConfig["quality"]
+                      )
+                    }
                     className="w-full p-3 bg-gray-700 border border-gray-600 rounded-md text-green-400 font-mono focus:border-green-500 focus:ring-1 focus:ring-green-500"
                   >
                     <option value="low">Low</option>
@@ -524,14 +577,13 @@ export default function SettingsPage({ onClose }: SettingsPageProps) {
                   <label className="block text-sm font-mono text-gray-300">
                     Target FPS: {settings.fps}
                   </label>
-                  <input
-                    type="range"
-                    min="30"
-                    max="144"
-                    step="1"
-                    value={settings.fps}
-                    onChange={(e) => updateSetting('fps', parseInt(e.target.value))}
-                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                  <Slider
+                    value={[settings.fps]}
+                    min={30}
+                    max={144}
+                    step={1}
+                    onValueChange={(vals) => updateSetting("fps", vals[0])}
+                    className="w-full"
                   />
                 </div>
 
@@ -541,22 +593,25 @@ export default function SettingsPage({ onClose }: SettingsPageProps) {
                     type="checkbox"
                     id="vsync"
                     checked={settings.vsync}
-                    onChange={(e) => updateSetting('vsync', e.target.checked)}
+                    onChange={(e) => updateSetting("vsync", e.target.checked)}
                     className="w-4 h-4 text-green-400 bg-gray-700 border-gray-600 rounded focus:ring-green-500"
                   />
-                  <label htmlFor="vsync" className="text-sm font-mono text-gray-300">
+                  <label
+                    htmlFor="vsync"
+                    className="text-sm font-mono text-gray-300"
+                  >
                     Enable VSync
                   </label>
                 </div>
               </div>
             )}
 
-            {activeTab === 'accessibility' && (
+            {activeTab === "accessibility" && (
               <div className="space-y-6">
                 <h3 className="text-xl font-mono font-bold text-green-400 mb-4">
                   [ACCESSIBILITY] USER ASSISTANCE
                 </h3>
-                
+
                 {/* Accessibility Options */}
                 <div className="space-y-4">
                   <div className="flex items-center space-x-3">
@@ -564,10 +619,15 @@ export default function SettingsPage({ onClose }: SettingsPageProps) {
                       type="checkbox"
                       id="highContrast"
                       checked={settings.highContrast}
-                      onChange={(e) => updateSetting('highContrast', e.target.checked)}
+                      onChange={(e) =>
+                        updateSetting("highContrast", e.target.checked)
+                      }
                       className="w-4 h-4 text-green-400 bg-gray-700 border-gray-600 rounded focus:ring-green-500"
                     />
-                    <label htmlFor="highContrast" className="text-sm font-mono text-gray-300">
+                    <label
+                      htmlFor="highContrast"
+                      className="text-sm font-mono text-gray-300"
+                    >
                       High Contrast Mode
                     </label>
                   </div>
@@ -577,10 +637,15 @@ export default function SettingsPage({ onClose }: SettingsPageProps) {
                       type="checkbox"
                       id="largeText"
                       checked={settings.largeText}
-                      onChange={(e) => updateSetting('largeText', e.target.checked)}
+                      onChange={(e) =>
+                        updateSetting("largeText", e.target.checked)
+                      }
                       className="w-4 h-4 text-green-400 bg-gray-700 border-gray-600 rounded focus:ring-green-500"
                     />
-                    <label htmlFor="largeText" className="text-sm font-mono text-gray-300">
+                    <label
+                      htmlFor="largeText"
+                      className="text-sm font-mono text-gray-300"
+                    >
                       Large Text
                     </label>
                   </div>
@@ -590,10 +655,15 @@ export default function SettingsPage({ onClose }: SettingsPageProps) {
                       type="checkbox"
                       id="screenReader"
                       checked={settings.screenReader}
-                      onChange={(e) => updateSetting('screenReader', e.target.checked)}
+                      onChange={(e) =>
+                        updateSetting("screenReader", e.target.checked)
+                      }
                       className="w-4 h-4 text-green-400 bg-gray-700 border-gray-600 rounded focus:ring-green-500"
                     />
-                    <label htmlFor="screenReader" className="text-sm font-mono text-gray-300">
+                    <label
+                      htmlFor="screenReader"
+                      className="text-sm font-mono text-gray-300"
+                    >
                       Screen Reader Support
                     </label>
                   </div>
@@ -604,7 +674,12 @@ export default function SettingsPage({ onClose }: SettingsPageProps) {
                     </label>
                     <select
                       value={settings.colorBlindMode}
-                      onChange={(e) => updateSetting('colorBlindMode', e.target.value as SettingsConfig['colorBlindMode'])}
+                      onChange={(e) =>
+                        updateSetting(
+                          "colorBlindMode",
+                          e.target.value as SettingsConfig["colorBlindMode"]
+                        )
+                      }
                       className="w-full p-3 bg-gray-700 border border-gray-600 rounded-md text-green-400 font-mono focus:border-green-500 focus:ring-1 focus:ring-green-500"
                     >
                       <option value="none">None</option>
@@ -627,7 +702,7 @@ export default function SettingsPage({ onClose }: SettingsPageProps) {
           >
             [RESET DEFAULTS]
           </button>
-          
+
           <div className="flex items-center space-x-4">
             <button
               onClick={handleCancel}

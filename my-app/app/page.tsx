@@ -11,7 +11,7 @@ import SystemStatus from "@/components/ui/SystemStatus";
 import ParticleSystem from "@/components/effects/ParticleSystem";
 import VolumeControl from "@/components/ui/VolumeControl";
 import { getCurrentUser, type User } from "@/lib/auth";
-import { generateTestData, type GameType } from "@/lib/leaderboard";
+import { generateTestData } from "@/lib/leaderboard";
 import { useSimpleAudio } from "@/lib/simpleAudio";
 // import { AnimationManager } from "@/lib/animations";
 // import { InputManager } from "@/lib/inputSystem";
@@ -27,95 +27,98 @@ export default function Home() {
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const [showParticles, setShowParticles] = useState(true);
   const [audioEnabled, setAudioEnabled] = useState(true);
-  const [particleMode, setParticleMode] = useState<'default' | 'matrix'>('matrix');
-  
+  const [particleMode, setParticleMode] = useState<"default" | "matrix">(
+    "matrix"
+  );
+
   // Audio system
   const audio = useSimpleAudio();
-  
+
   // Refs for systems
   // const audioManagerRef = useRef<AudioManager | null>(null);
   // const animationManagerRef = useRef<AnimationManager | null>(null);
   // const inputManagerRef = useRef<InputManager | null>(null);
-  const particleSystemRef = useRef<HTMLCanvasElement>(null);
+  const hasInitializedRef = useRef(false);
 
   useEffect(() => {
-    let loadingTimer: NodeJS.Timeout;
-    let failsafeTimer: NodeJS.Timeout;
+    if (hasInitializedRef.current) return;
+    hasInitializedRef.current = true;
+    let loadingTimer: ReturnType<typeof setTimeout> | undefined;
+    // Absolute failsafe: Only trigger if initialization takes too long or fails
+    const failsafeTimer = setTimeout(() => {
+      console.warn(
+        "Loading failsafe triggered - systems may not be fully initialized"
+      );
+      setIsLoading(false);
+      setLoadingTimeout(true);
+    }, 10000); // Increased to 10 seconds to be more reasonable
 
     const initializeApp = async () => {
-      console.log('Starting app initialization...');
-      
+      console.log("Starting app initialization...");
+
       try {
         // Check if user is already authenticated
         try {
           const currentUser = getCurrentUser();
           setUser(currentUser);
-          console.log('User loaded:', currentUser ? 'Authenticated' : 'Guest');
+          console.log("User loaded:", currentUser ? "Authenticated" : "Guest");
         } catch (authError) {
-          console.warn('Auth check failed:', authError);
+          console.warn("Auth check failed:", authError);
           setUser(null);
         }
 
         // Generate test data on first load (only if no data exists)
         try {
-          if (typeof window !== 'undefined') {
-            const existingData = localStorage.getItem("__gta_hack_leaderboard__");
+          if (typeof window !== "undefined") {
+            const existingData = localStorage.getItem(
+              "__gta_hack_leaderboard__"
+            );
             if (!existingData) {
               generateTestData();
-              console.log('Test data generated');
+              console.log("Test data generated");
             }
           }
         } catch (dataError) {
-          console.warn('Test data generation failed:', dataError);
+          console.warn("Test data generation failed:", dataError);
         }
 
         // Initialize audio system in background (non-blocking)
-        audio.resumeAudioContext().catch(audioError => {
-          console.warn('Audio initialization failed:', audioError);
+        audio.resumeAudioContext().catch((audioError) => {
+          console.warn("Audio initialization failed:", audioError);
         });
 
-        console.log('App initialization completed successfully');
+        console.log("App initialization completed successfully");
 
         // Clear failsafe timer since initialization completed successfully
-        if (failsafeTimer) {
-          clearTimeout(failsafeTimer);
-        }
+        clearTimeout(failsafeTimer);
 
         // Complete loading after successful initialization
         loadingTimer = setTimeout(() => {
           setIsLoading(false);
-          console.log('Loading completed successfully');
+          console.log("Loading completed successfully");
         }, 300);
-
       } catch (error) {
-        console.error('App initialization failed:', error);
+        console.error("App initialization failed:", error);
         // Only show warning if there was an actual error
         setLoadingTimeout(true);
         setIsLoading(false);
       }
     };
 
-    // Absolute failsafe: Only trigger if initialization takes too long or fails
-    failsafeTimer = setTimeout(() => {
-      console.warn('Loading failsafe triggered - systems may not be fully initialized');
-      setIsLoading(false);
-      setLoadingTimeout(true);
-    }, 10000); // Increased to 10 seconds to be more reasonable
-
     initializeApp();
 
     return () => {
       if (loadingTimer) clearTimeout(loadingTimer);
-      if (failsafeTimer) clearTimeout(failsafeTimer);
+      clearTimeout(failsafeTimer);
     };
-  }, []); // Remove audio dependency to prevent re-initialization
+  }, [audio]);
 
   const handleAuthenticated = (authenticatedUser: User) => {
     setUser(authenticatedUser);
-    
+
     // Play login sound
     if (audioEnabled) {
-      audio.playSound('login');
+      audio.playSound("login");
     }
 
     // Add login animation (temporarily disabled)
@@ -127,14 +130,14 @@ export default function Home() {
   const handleLogout = () => {
     // Play logout sound
     if (audioEnabled) {
-      audio.playSound('logout');
+      audio.playSound("logout");
     }
-    
+
     setUser(null);
     setCurrentPage("games");
   };
 
-  const handleLeaderboardClick = (_gameType?: GameType) => {
+  const handleLeaderboardClick = () => {
     setCurrentPage("leaderboard");
   };
 
@@ -204,18 +207,18 @@ export default function Home() {
         </div>
       </div>
 
-             {/* Dynamic Particle System */}
-             {showParticles && (
-               <ParticleSystem
-                 width={typeof window !== 'undefined' ? window.innerWidth : 800}
-                 height={typeof window !== 'undefined' ? window.innerHeight : 600}
-                 particleCount={particleMode === 'matrix' ? 80 : 150}
-                 spawnRate={particleMode === 'matrix' ? 0.4 : 0.16}
-                 enabled={true}
-                 mode={particleMode}
-                 className={particleMode === 'matrix' ? 'opacity-90' : 'opacity-60'}
-               />
-             )}
+      {/* Dynamic Particle System */}
+      {showParticles && (
+        <ParticleSystem
+          width={typeof window !== "undefined" ? window.innerWidth : 800}
+          height={typeof window !== "undefined" ? window.innerHeight : 600}
+          particleCount={particleMode === "matrix" ? 80 : 150}
+          spawnRate={particleMode === "matrix" ? 0.4 : 0.16}
+          enabled={true}
+          mode={particleMode}
+          className={particleMode === "matrix" ? "opacity-90" : "opacity-60"}
+        />
+      )}
 
       {/* Enhanced Glitch overlay */}
       <div className="absolute inset-0 pointer-events-none">
@@ -233,35 +236,41 @@ export default function Home() {
           onClick={() => {
             if (showParticles) {
               // Toggle particle mode
-              setParticleMode(prev => prev === 'matrix' ? 'default' : 'matrix');
+              setParticleMode((prev) =>
+                prev === "matrix" ? "default" : "matrix"
+              );
             } else {
               // Turn on particles
               setShowParticles(true);
             }
             if (audioEnabled) {
-              audio.playSound('click');
+              audio.playSound("click");
             }
           }}
           onContextMenu={(e) => {
             e.preventDefault();
             setShowParticles(!showParticles);
             if (audioEnabled) {
-              audio.playSound('click');
+              audio.playSound("click");
             }
           }}
           className={`px-2 py-1 text-xs font-mono font-medium transition-all duration-200 border rounded ${
-            showParticles 
-              ? 'text-green-400 border-green-500/30 bg-green-900/20 hover:bg-green-900/30' 
-              : 'text-green-300/70 border-green-500/30 hover:text-green-400 hover:bg-green-900/20'
+            showParticles
+              ? "text-green-400 border-green-500/30 bg-green-900/20 hover:bg-green-900/30"
+              : "text-green-300/70 border-green-500/30 hover:text-green-400 hover:bg-green-900/20"
           }`}
           title="Left click: Toggle mode | Right click: Toggle on/off"
         >
           <span className="mr-1">
-            {!showParticles ? '✨' : particleMode === 'matrix' ? '🌧️' : '🌟'}
+            {!showParticles ? "✨" : particleMode === "matrix" ? "🌧️" : "🌟"}
           </span>
-          {!showParticles ? 'EFFECTS.off' : particleMode === 'matrix' ? 'MATRIX.exe' : 'PARTICLES.exe'}
+          {!showParticles
+            ? "EFFECTS.off"
+            : particleMode === "matrix"
+            ? "MATRIX.exe"
+            : "PARTICLES.exe"}
         </button>
-        <VolumeControl 
+        <VolumeControl
           onVolumeChange={(volume) => audio.setMasterVolume(volume)}
           onMuteToggle={(muted) => {
             audio.setMuted(muted);
@@ -277,8 +286,12 @@ export default function Home() {
             <span>⚠️</span>
             <div>
               <div className="font-semibold">System Warning</div>
-              <div className="text-xs opacity-80">Initialization took longer than expected</div>
-              <div className="text-xs opacity-60">Audio or visual effects may be limited</div>
+              <div className="text-xs opacity-80">
+                Initialization took longer than expected
+              </div>
+              <div className="text-xs opacity-60">
+                Audio or visual effects may be limited
+              </div>
             </div>
           </div>
         </div>

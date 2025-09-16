@@ -40,8 +40,23 @@ export interface PhysicsComponent extends Component {
 
 export interface Collider {
   type: 'circle' | 'rectangle' | 'polygon';
-  bounds: any;
+  bounds: CircleBounds | RectangleBounds | PolygonBounds;
   isTrigger: boolean;
+}
+
+export interface CircleBounds {
+  radius: number;
+}
+
+export interface RectangleBounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface PolygonBounds {
+  points: Vector2D[];
 }
 
 export interface RenderComponent extends Component {
@@ -99,8 +114,8 @@ export interface InputManager {
   isMouseDown(button: number): boolean;
   isMousePressed(button: number): boolean;
   getMousePosition(): Vector2D;
-  addEventListener(type: string, callback: (event: any) => void): void;
-  removeEventListener(type: string, callback: (event: any) => void): void;
+  addEventListener(type: string, callback: (event: Event) => void): void;
+  removeEventListener(type: string, callback: (event: Event) => void): void;
   handleKeyDown(event: KeyboardEvent): void;
   handleKeyUp(event: KeyboardEvent): void;
   handleMouseDown(event: MouseEvent): void;
@@ -202,16 +217,16 @@ export interface ResourceManager {
   images: Map<string, HTMLImageElement>;
   sounds: Map<string, HTMLAudioElement>;
   fonts: Map<string, FontFace>;
-  data: Map<string, any>;
+  data: Map<string, unknown>;
   init(): Promise<void>;
   loadImage(url: string, name: string): Promise<HTMLImageElement>;
   loadSound(url: string, name: string): Promise<HTMLAudioElement>;
   loadFont(url: string, name: string): Promise<FontFace>;
-  loadData(url: string, name: string): Promise<any>;
+  loadData(url: string, name: string): Promise<unknown>;
   getImage(name: string): HTMLImageElement | undefined;
   getSound(name: string): HTMLAudioElement | undefined;
   getFont(name: string): FontFace | undefined;
-  getData(name: string): any;
+  getData(name: string): unknown;
   preload(resources: ResourceDefinition[]): Promise<void>;
 }
 
@@ -222,11 +237,11 @@ export interface ResourceDefinition {
 }
 
 export interface EventManager {
-  listeners: Map<string, Function[]>;
-  emit(event: string, data?: any): void;
-  on(event: string, callback: Function): void;
-  off(event: string, callback: Function): void;
-  once(event: string, callback: Function): void;
+  listeners: Map<string, Array<(data?: unknown) => void>>;
+  emit(event: string, data?: unknown): void;
+  on(event: string, callback: (data?: unknown) => void): void;
+  off(event: string, callback: (data?: unknown) => void): void;
+  once(event: string, callback: (data?: unknown) => void): void;
   clear(): void;
 }
 
@@ -427,8 +442,8 @@ export class GameEngineImpl implements GameEngine {
   lastFrameTime: number;
 
   constructor() {
-    this.canvas = null as any;
-    this.context = null as any;
+    this.canvas = null as unknown as HTMLCanvasElement;
+    this.context = null as unknown as CanvasRenderingContext2D;
     this.state = {
       currentScene: '',
       scenes: new Map(),
@@ -679,11 +694,11 @@ class InputManagerImpl implements InputManager {
     return { ...this.mouse.position };
   }
 
-  addEventListener(type: string, callback: (event: any) => void): void {
+  addEventListener(type: string, callback: (event: Event) => void): void {
     document.addEventListener(type, callback);
   }
 
-  removeEventListener(type: string, callback: (event: any) => void): void {
+  removeEventListener(type: string, callback: (event: Event) => void): void {
     document.removeEventListener(type, callback);
   }
 
@@ -751,7 +766,7 @@ class ResourceManagerImpl implements ResourceManager {
   images: Map<string, HTMLImageElement>;
   sounds: Map<string, HTMLAudioElement>;
   fonts: Map<string, FontFace>;
-  data: Map<string, any>;
+  data: Map<string, unknown>;
 
   constructor() {
     this.images = new Map();
@@ -794,9 +809,9 @@ class ResourceManagerImpl implements ResourceManager {
     return font;
   }
 
-  async loadData(url: string, name: string): Promise<any> {
+  async loadData(url: string, name: string): Promise<unknown> {
     const response = await fetch(url);
-    const data = await response.json();
+    const data: unknown = await response.json();
     this.data.set(name, data);
     return data;
   }
@@ -813,7 +828,7 @@ class ResourceManagerImpl implements ResourceManager {
     return this.fonts.get(name);
   }
 
-  getData(name: string): any {
+  getData(name: string): unknown {
     return this.data.get(name);
   }
 
@@ -839,27 +854,27 @@ class ResourceManagerImpl implements ResourceManager {
 
 // Event Manager Implementation
 class EventManagerImpl implements EventManager {
-  listeners: Map<string, Function[]>;
+  listeners: Map<string, Array<(data?: unknown) => void>>;
 
   constructor() {
     this.listeners = new Map();
   }
 
-  emit(event: string, data?: any): void {
+  emit(event: string, data?: unknown): void {
     const callbacks = this.listeners.get(event);
     if (callbacks) {
       callbacks.forEach(callback => callback(data));
     }
   }
 
-  on(event: string, callback: Function): void {
+  on(event: string, callback: (data?: unknown) => void): void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, []);
     }
     this.listeners.get(event)!.push(callback);
   }
 
-  off(event: string, callback: Function): void {
+  off(event: string, callback: (data?: unknown) => void): void {
     const callbacks = this.listeners.get(event);
     if (callbacks) {
       const index = callbacks.indexOf(callback);
@@ -869,8 +884,8 @@ class EventManagerImpl implements EventManager {
     }
   }
 
-  once(event: string, callback: Function): void {
-    const onceCallback = (data: any) => {
+  once(event: string, callback: (data?: unknown) => void): void {
+    const onceCallback = (data?: unknown) => {
       callback(data);
       this.off(event, onceCallback);
     };
@@ -960,7 +975,8 @@ class PhysicsEngineImpl implements PhysicsEngine {
   private getObjectBounds(object: PhysicsObject): Rectangle {
     const collider = object.collider;
     if (collider.type === 'circle') {
-      const radius = collider.bounds.radius;
+      const circle = collider.bounds as CircleBounds;
+      const radius = circle.radius;
       return {
         x: object.position.x - radius,
         y: object.position.y - radius,
@@ -968,11 +984,12 @@ class PhysicsEngineImpl implements PhysicsEngine {
         height: radius * 2
       };
     } else if (collider.type === 'rectangle') {
+      const rect = collider.bounds as RectangleBounds;
       return {
-        x: object.position.x + collider.bounds.x,
-        y: object.position.y + collider.bounds.y,
-        width: collider.bounds.width,
-        height: collider.bounds.height
+        x: object.position.x + rect.x,
+        y: object.position.y + rect.y,
+        width: rect.width,
+        height: rect.height
       };
     }
     return { x: 0, y: 0, width: 0, height: 0 };
@@ -1115,14 +1132,14 @@ class PhysicsEngineImpl implements PhysicsEngine {
     };
 
     // Calculate normal
-    let normal = { x: 0, y: 0 };
+    const normal = { x: 0, y: 0 };
     if (t === t1) normal.x = -1;
     else if (t === t2) normal.x = 1;
     else if (t === t3) normal.y = -1;
     else if (t === t4) normal.y = 1;
 
     return {
-      object: null as any,
+      object: null as unknown as PhysicsObject,
       point,
       distance: t,
       normal
@@ -1330,8 +1347,8 @@ class UISystemImpl implements UISystem {
 
   constructor() {
     this.elements = new Map();
-    this.canvas = null as any;
-    this.context = null as any;
+    this.canvas = null as unknown as HTMLCanvasElement;
+    this.context = null as unknown as CanvasRenderingContext2D;
   }
 
   init(canvas: HTMLCanvasElement): void {

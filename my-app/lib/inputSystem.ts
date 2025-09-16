@@ -7,7 +7,7 @@ export interface InputEvent {
   type: InputEventType;
   timestamp: number;
   target?: HTMLElement;
-  data: any;
+  data: unknown;
 }
 
 export enum InputEventType {
@@ -106,7 +106,7 @@ export interface GamepadButton {
 }
 
 export interface VibrationActuator {
-  playEffect(type: string, params: any): Promise<void>;
+  playEffect(type: string, params: unknown): Promise<void>;
   reset(): Promise<void>;
 }
 
@@ -223,7 +223,7 @@ export class InputManagerImpl implements InputManager {
   maxEvents: number;
   enabled: boolean;
 
-  private eventListeners: Map<InputEventType, Function[]>;
+  private eventListeners: Map<InputEventType, Array<(event: InputEvent) => void>>;
   private activeMapping: string | null;
   private lastMousePosition: Vector2D;
   private lastTouchPositions: Map<number, Vector2D>;
@@ -331,7 +331,7 @@ export class InputManagerImpl implements InputManager {
       axes: Array.from(gamepad.axes),
       mapping: gamepad.mapping,
       timestamp: gamepad.timestamp,
-      vibration: (gamepad as any).vibrationActuator || null
+      vibration: (gamepad as unknown as { vibrationActuator?: VibrationActuator }).vibrationActuator || null
     };
 
     // Update button states
@@ -416,20 +416,23 @@ export class InputManagerImpl implements InputManager {
     });
   }
 
-  private createActionEvent(actionName: string, type: string): InputEvent {
+  private createActionEvent(actionName: string, _type: string): InputEvent {
     return {
       type: InputEventType.KEY_DOWN, // Default type
       timestamp: Date.now(),
-      data: { action: actionName, type }
+      data: { action: actionName, type: _type }
     };
   }
 
-  private getActionState(actionName: string): boolean {
+  private getActionState(_actionName: string): boolean {
+    void _actionName;
     // This would be implemented to track action states
     return false;
   }
 
-  private setActionState(actionName: string, state: boolean): void {
+  private setActionState(_actionName: string, _state: boolean): void {
+    void _actionName;
+    void _state;
     // This would be implemented to track action states
   }
 
@@ -721,7 +724,7 @@ export class InputManagerImpl implements InputManager {
       axes: Array.from(gamepad.axes),
       mapping: gamepad.mapping,
       timestamp: gamepad.timestamp,
-      vibration: (gamepad as any).vibrationActuator || null
+      vibration: (gamepad as unknown as { vibrationActuator?: VibrationActuator }).vibrationActuator || null
     });
 
     this.emit({

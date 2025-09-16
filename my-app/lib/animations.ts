@@ -30,7 +30,8 @@ export interface ParticleConfig {
   friction?: number;
 }
 
-export type Animation = AnimationEffect | { interval: number; cancel?: () => void } | { cancel: () => void };
+type IntervalHandle = ReturnType<typeof setInterval>;
+export type Animation = AnimationEffect | { interval: IntervalHandle; cancel?: () => void } | { cancel: () => void };
 
 export class AnimationManager {
   private static instance: AnimationManager;
@@ -79,7 +80,7 @@ export class AnimationManager {
     };
 
     const interval = setInterval(draw, 35);
-    this.animations.set('matrix-rain', { interval } as any);
+    this.animations.set('matrix-rain', { interval });
   }
 
   // Glitch Effect
@@ -101,7 +102,7 @@ export class AnimationManager {
     };
 
     const interval = setInterval(glitch, 50);
-    this.animations.set('glitch', { interval } as any);
+    this.animations.set('glitch', { interval });
   }
 
   // Particle System
@@ -109,20 +110,7 @@ export class AnimationManager {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const defaultConfig: ParticleConfig = {
-      x: 0,
-      y: 0,
-      vx: 0,
-      vy: 0,
-      life: 1,
-      maxLife: 1,
-      size: 2,
-      color: '#0F4',
-      alpha: 1,
-      gravity: 0.1,
-      friction: 0.98,
-      ...config
-    };
+    // config can be used to seed particles via addParticle
 
     const updateParticles = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
