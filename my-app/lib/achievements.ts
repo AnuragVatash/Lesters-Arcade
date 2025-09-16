@@ -715,6 +715,7 @@ export class AchievementManager {
 
   // Check custom achievement requirements
   private checkCustomRequirement(achievementId: string, _requirement: AchievementRequirement): boolean {
+    void _requirement; // parameter currently unused by specific checks
     switch (achievementId) {
       case 'hacker-legend':
         return this.getUnlockedAchievements().length >= Object.keys(achievements).length - 1; // -1 for this achievement itself

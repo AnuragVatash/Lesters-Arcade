@@ -45,6 +45,7 @@ const SliderBase = React.forwardRef<
 ));
 SliderBase.displayName = SliderPrimitive.Root.displayName;
 
+export type SliderRef = React.ElementRef<typeof SliderPrimitive.Root>;
 export const Slider = SliderBase as React.ForwardRefExoticComponent<
-  SliderProps & React.RefAttributes<any>
+  SliderProps & React.RefAttributes<SliderRef>
 >;

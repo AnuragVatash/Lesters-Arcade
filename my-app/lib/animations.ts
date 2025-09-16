@@ -106,7 +106,8 @@ export class AnimationManager {
   }
 
   // Particle System
-  createParticleSystem(canvas: HTMLCanvasElement, config: Partial<ParticleConfig> = {}): void {
+  createParticleSystem(canvas: HTMLCanvasElement, _config: Partial<ParticleConfig> = {}): void {
+    void _config; // currently unused
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 

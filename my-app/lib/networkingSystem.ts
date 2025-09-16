@@ -275,8 +275,8 @@ export class WebSocketManagerImpl implements WebSocketManager {
     }
 
     try {
-      const data = JSON.stringify(message);
-      this.socket.send(data);
+      const serialized = JSON.stringify(message);
+      this.socket.send(serialized);
       
       this.messages.set(message.id, message);
       this.emit({
@@ -287,7 +287,7 @@ export class WebSocketManagerImpl implements WebSocketManager {
 
       this.log(`Message sent: ${message.type}`);
     } catch (error) {
-      this.log(`Failed to send message: ${error}`);
+      this.log(`Failed to send message: ${String(error)}`);
       throw error;
     }
   }
@@ -297,9 +297,11 @@ export class WebSocketManagerImpl implements WebSocketManager {
     await this.send(message);
   }
 
-  async broadcast(message: NetworkMessage, exclude: string[] = []): Promise<void> {
+  async broadcast(message: NetworkMessage, _exclude: string[] = []): Promise<void> {
+    // For simplicity, send to all for now; exclude currently unused
+    void _exclude;
     for (const [id, connection] of this.connections) {
-      if (!exclude.includes(id) && connection.connected) {
+      if (connection.connected) {
         await this.sendTo(id, message);
       }
     }

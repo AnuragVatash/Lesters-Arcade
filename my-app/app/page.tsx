@@ -19,6 +19,24 @@ import { useSimpleAudio } from "@/lib/simpleAudio";
 type Game = "casino" | "cayo" | "number";
 type Page = "games" | "leaderboard";
 
+// Debug handle type for attaching helpers on window during development
+declare global {
+  interface Window {
+    __homeDebug__?: {
+      setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
+      setLoadingTimeout: React.Dispatch<React.SetStateAction<boolean>>;
+      setUser: React.Dispatch<React.SetStateAction<User | null>>;
+      snapshot: () => {
+        isLoading: boolean;
+        loadingTimeout: boolean;
+        user: User | null;
+        activeGame: Game;
+        currentPage: Page;
+      };
+    };
+  }
+}
+
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [activeGame, setActiveGame] = useState<Game>("cayo");
@@ -33,6 +51,9 @@ export default function Home() {
 
   // Audio system
   const audio = useSimpleAudio();
+  const audioRef = useRef(audio);
+  // keep a stable ref to avoid exhaustive-deps warning while still using latest methods
+  audioRef.current = audio;
 
   // Refs for systems
   // const audioManagerRef = useRef<AudioManager | null>(null);
@@ -40,6 +61,7 @@ export default function Home() {
   // const inputManagerRef = useRef<InputManager | null>(null);
   const hasInitializedRef = useRef(false);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (hasInitializedRef.current) {
       console.log("[Home] Initialization skipped: already initialized", {
@@ -92,7 +114,7 @@ export default function Home() {
 
         // Initialize audio system in background (non-blocking)
         console.log("[Home] Initializing audio context (non-blocking)...");
-        audio.resumeAudioContext().then(() => {
+        audioRef.current.resumeAudioContext().then(() => {
           console.log("[Home] Audio context resumed or not needed");
         }).catch((audioError) => {
           console.warn("Audio initialization failed:", audioError);
@@ -139,7 +161,7 @@ export default function Home() {
   // Debug: expose simple toggles to window for manual testing
   useEffect(() => {
     if (typeof window === "undefined") return;
-    (window as any).__homeDebug__ = {
+    window.__homeDebug__ = {
       setIsLoading,
       setLoadingTimeout,
       setUser,
