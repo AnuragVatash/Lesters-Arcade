@@ -48,6 +48,7 @@ export default function Home() {
   const [particleMode, setParticleMode] = useState<"default" | "matrix">(
     "matrix"
   );
+  const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
 
   // Audio system
   const audio = useSimpleAudio();
@@ -61,7 +62,6 @@ export default function Home() {
   // const inputManagerRef = useRef<InputManager | null>(null);
   const hasInitializedRef = useRef(false);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (hasInitializedRef.current) {
       console.log("[Home] Initialization skipped: already initialized", {
@@ -170,6 +170,42 @@ export default function Home() {
     console.log("[Home] Debug handle available on window.__homeDebug__");
   }, [isLoading, loadingTimeout, user, activeGame, currentPage]);
 
+  // Set window dimensions after hydration to prevent hydration mismatch
+  useEffect(() => {
+    const updateDimensions = () => {
+      setDimensions({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+
+    // Set initial dimensions after hydration
+    updateDimensions();
+
+    // Update dimensions on window resize
+    window.addEventListener('resize', updateDimensions);
+    
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
+
+  // Add keyboard support for skipping loading screen
+  useEffect(() => {
+    if (!isLoading) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        setIsLoading(false);
+        if (audioEnabled) {
+          audio.playSound('click');
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isLoading, audioEnabled, audio]);
+
   const handleAuthenticated = (authenticatedUser: User) => {
     setUser(authenticatedUser);
 
@@ -236,10 +272,21 @@ export default function Home() {
                 <div className="animate-spin w-3 h-3 border-2 border-green-400 border-t-transparent rounded-full"></div>
                 <span className="animate-pulse">Initializing systems...</span>
               </div>
-              <div className="text-xs opacity-50">If this takes too long, try refreshing the page</div>
-              <div className="w-32 h-1 bg-green-900/30 rounded-full mx-auto mt-4 overflow-hidden">
+              <div className="text-xs opacity-50 mb-4">Press ESC, ENTER, or SPACE to skip • If stuck, refresh the page</div>
+              <div className="w-32 h-1 bg-green-900/30 rounded-full mx-auto mt-4 overflow-hidden mb-6">
                 <div className="h-full bg-green-400 rounded-full animate-pulse w-full"></div>
               </div>
+              <button
+                onClick={() => {
+                  setIsLoading(false);
+                  if (audioEnabled) {
+                    audio.playSound('click');
+                  }
+                }}
+                className="px-4 py-2 bg-green-900/30 hover:bg-green-800/50 border border-green-500/50 rounded-md text-green-400 text-sm font-mono transition-all duration-200 hover:text-green-300 hover:border-green-400/50 active:bg-green-700/50"
+              >
+                [SKIP] Enter Arcade
+              </button>
             </div>
           </div>
         </div>
@@ -261,8 +308,8 @@ export default function Home() {
       {/* Dynamic Particle System */}
       {showParticles && (
         <ParticleSystem
-          width={typeof window !== "undefined" ? window.innerWidth : 800}
-          height={typeof window !== "undefined" ? window.innerHeight : 600}
+          width={dimensions.width}
+          height={dimensions.height}
           particleCount={particleMode === "matrix" ? 80 : 150}
           spawnRate={particleMode === "matrix" ? 0.4 : 0.16}
           enabled={true}

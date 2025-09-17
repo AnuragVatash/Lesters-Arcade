@@ -982,7 +982,7 @@ export class HTTPManagerImpl implements HTTPManager {
 
   async send(message: NetworkMessage): Promise<void> {
     try {
-      const response = await this.post('/message', message);
+      await this.post('/message', message);
       
       this.messages.set(message.id, message);
       this.emit({
@@ -1003,7 +1003,7 @@ export class HTTPManagerImpl implements HTTPManager {
     await this.send(message);
   }
 
-  async broadcast(message: NetworkMessage, exclude: string[] = []): Promise<void> {
+  async broadcast(message: NetworkMessage, _exclude: string[] = []): Promise<void> { // eslint-disable-line @typescript-eslint/no-unused-vars
     await this.send(message);
   }
 
@@ -1086,7 +1086,7 @@ export class HTTPManagerImpl implements HTTPManager {
     return this.serverConnection?.bandwidth || 0;
   }
 
-  getPacketLoss(id?: string): number {
+  getPacketLoss(_id?: string): number { // eslint-disable-line @typescript-eslint/no-unused-vars
     return 0; // HTTP doesn't have packet loss
   }
 

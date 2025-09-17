@@ -47,8 +47,15 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
 
   useEffect(() => {
     const updateScale = () => {
-      const maxWidth = Math.min(window.innerWidth - 32, 1280); // 32px for padding
-      setContainerWidth(maxWidth);
+      const viewportWidth = window.innerWidth;
+      
+      // Calculate max width based on viewport with padding
+      const maxWidth = Math.min(viewportWidth - 64, 1280); // 64px for padding (32px each side)
+      
+      // Ensure minimum usable width
+      const finalWidth = Math.max(maxWidth, 320);
+      
+      setContainerWidth(finalWidth);
     };
 
     updateScale();
@@ -306,7 +313,7 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
   }, [gameStarted, isScanning, handleSubmit]);
 
   return (
-    <div className="relative flex flex-col items-center justify-center h-full p-2 sm:p-4 gap-4 overflow-hidden">
+    <div className="relative flex flex-col items-center justify-center min-h-screen w-full p-2 sm:p-4 gap-4 overflow-auto">
       {/* Matrix Rain Background */}
       <ParticleSystem
         width={typeof window !== "undefined" ? window.innerWidth : 800}
@@ -332,8 +339,12 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
       )}
 
       <div
-        className="border-2 border-green-500/30 w-full max-w-[1280px] relative bg-black/50 shadow-2xl shadow-green-500/20"
-        style={{ width: containerWidth, height: containerHeight }}
+        className="border-2 border-green-500/30 w-full max-w-[1280px] relative bg-black/50 shadow-2xl shadow-green-500/20 mx-auto"
+        style={{ 
+          width: containerWidth, 
+          height: containerHeight,
+          minHeight: '600px'
+        }}
       >
         {showStartup && (
           <div className="absolute inset-0 z-30 bg-black/95 backdrop-blur-sm flex items-center justify-center">
@@ -378,8 +389,8 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
             </div>
           </div>
         )}
-        <div className="w-full h-full p-4">
-          <div className="flex flex-row items-start justify-between gap-4 w-full h-full">
+        <div className="w-full h-full p-4 overflow-hidden">
+          <div className="flex flex-row items-start justify-between gap-4 w-full h-full min-h-0">
             {/* Left column */}
             <div
               className="flex flex-col gap-3 h-full"
