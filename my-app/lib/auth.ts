@@ -31,7 +31,11 @@ export function getAllUsers(): User[] {
 // Save users to storage (developer access only)
 function saveUsers(users: User[]): void {
   if (typeof window === 'undefined') return;
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  try {
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  } catch (error) {
+    console.warn('Failed to save users to localStorage:', error);
+  }
 }
 
 // Register a new user
@@ -77,7 +81,11 @@ export function loginUser(username: string, password: string): { success: boolea
 
   // Save current user session
   if (typeof window !== 'undefined') {
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+    try {
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+    } catch (error) {
+      console.warn('Failed to save user session to localStorage:', error);
+    }
   }
 
   return { success: true, message: 'Login successful', user };
@@ -114,7 +122,11 @@ export function getCurrentUser(): User | null {
 // Logout user
 export function logoutUser(): void {
   if (typeof window === 'undefined') return;
-  localStorage.removeItem(CURRENT_USER_KEY);
+  try {
+    localStorage.removeItem(CURRENT_USER_KEY);
+  } catch (error) {
+    console.warn('Failed to clear user session from localStorage:', error);
+  }
 }
 
 // Check if user is authenticated

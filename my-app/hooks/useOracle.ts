@@ -20,6 +20,8 @@ export function useOracle({ gameStarted, onOracleActivated, isScanning = false, 
   };
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       // Only detect oracle during active gameplay (not during scanning)
       if (!gameStarted || isScanning) return;

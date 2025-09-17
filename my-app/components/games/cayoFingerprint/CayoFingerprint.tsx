@@ -10,20 +10,19 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { submitTime as submitLeaderboardTime } from "@/lib/leaderboard";
 import TimeComparisonDisplay from "@/components/ui/TimeComparison";
+import StartupOverlay from "@/components/ui/StartupOverlay";
 import ScanningPopup from "@/components/ui/ScanningPopup";
 import { useOracle } from "@/hooks/useOracle";
 import ParticleSystem from "@/components/effects/ParticleSystem";
 
-interface User {
-  username: string;
-  isGuest: boolean;
-}
+import { type User } from "@/lib/auth";
 
 interface CayoFingerprintProps {
   user: User;
+  skipCutscenes?: boolean;
 }
 
-export default function CayoFingerprint({ user }: CayoFingerprintProps) {
+export default function CayoFingerprint({ user, skipCutscenes = false }: CayoFingerprintProps) {
   // All 8 pieces now need to be matched correctly.
   const PRINT_DIR = "print1";
 
@@ -61,6 +60,23 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
     updateScale();
     window.addEventListener("resize", updateScale);
     return () => window.removeEventListener("resize", updateScale);
+  }, []);
+
+  // Set window dimensions after hydration to prevent hydration mismatch
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (typeof window === 'undefined') return;
+      setDimensions({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+
+    updateDimensions();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', updateDimensions);
+      return () => window.removeEventListener('resize', updateDimensions);
+    }
   }, []);
 
   // Panel dimensions at base resolution
@@ -101,6 +117,7 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
   const [hackingText, setHackingText] = useState<string>(
     "INITIALIZING HACK PROTOCOL..."
   );
+  const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
 
   // Oracle hook for cheat code functionality
   const { oracleActive, resetOracle } = useOracle({
@@ -163,6 +180,16 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
   useEffect(() => {
     if (!showStartup) return;
 
+    // Fast path when skip is enabled: briefly show the overlay, then continue
+    if (skipCutscenes) {
+      setHackingText("INITIALIZING HACK PROTOCOL...");
+      setHackingProgress(100);
+      const t = setTimeout(() => {
+        setShowStartup(false);
+      }, 300);
+      return () => clearTimeout(t);
+    }
+
     const hackingSteps = [
       { text: "INITIALIZING HACK PROTOCOL...", duration: 800 },
       { text: "BYPASSING SECURITY FIREWALL...", duration: 1200 },
@@ -174,11 +201,14 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
 
     let currentStep = 0;
     let currentProgress = 0;
+    let progressInterval: NodeJS.Timeout | null = null;
+    let stepTimeout: NodeJS.Timeout | null = null;
+    let finalTimeout: NodeJS.Timeout | null = null;
 
     const updateProgress = () => {
       if (currentStep >= hackingSteps.length) {
         setHackingProgress(100);
-        setTimeout(() => {
+        finalTimeout = setTimeout(() => {
           setShowStartup(false);
         }, 500);
         return;
@@ -188,16 +218,16 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
       setHackingText(step.text);
 
       const stepIncrement = 100 / hackingSteps.length;
-      const progressInterval = setInterval(() => {
+      progressInterval = setInterval(() => {
         currentProgress += 2;
         setHackingProgress(
           Math.min(currentProgress, (currentStep + 1) * stepIncrement)
         );
 
         if (currentProgress >= (currentStep + 1) * stepIncrement) {
-          clearInterval(progressInterval);
+          if (progressInterval) clearInterval(progressInterval);
           currentStep++;
-          setTimeout(updateProgress, 200);
+          stepTimeout = setTimeout(updateProgress, 200);
         }
       }, step.duration / (stepIncrement / 2));
     };
@@ -206,8 +236,11 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
 
     return () => {
       clearTimeout(startTimeout);
+      if (progressInterval) clearInterval(progressInterval);
+      if (stepTimeout) clearTimeout(stepTimeout);
+      if (finalTimeout) clearTimeout(finalTimeout);
     };
-  }, [showStartup]);
+  }, [showStartup, skipCutscenes]);
 
   // Global keyboard navigation
   useEffect(() => {
@@ -316,8 +349,8 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
     <div className="relative flex flex-col items-center justify-center min-h-screen w-full p-2 sm:p-4 gap-4 overflow-auto">
       {/* Matrix Rain Background */}
       <ParticleSystem
-        width={typeof window !== "undefined" ? window.innerWidth : 800}
-        height={typeof window !== "undefined" ? window.innerHeight : 600}
+        width={dimensions.width}
+        height={dimensions.height}
         particleCount={25}
         spawnRate={0.1}
         enabled={true}
@@ -346,34 +379,7 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
           minHeight: '600px'
         }}
       >
-        {showStartup && (
-          <div className="absolute inset-0 z-30 bg-black/95 backdrop-blur-sm flex items-center justify-center">
-            <div className="text-center max-w-md">
-              <div className="mb-8">
-                <div className="text-green-400 font-mono text-2xl mb-2 animate-pulse">
-                  [SYSTEM] BREACH IN PROGRESS
-                </div>
-                <div className="text-green-300 font-mono text-sm mb-6">
-                  {hackingText}
-                </div>
-                <div className="w-full bg-gray-800 rounded-full h-3 mb-4 border border-green-500/50">
-                  <div
-                    className="bg-gradient-to-r from-green-600 to-green-400 h-3 rounded-full transition-all duration-300 relative overflow-hidden"
-                    style={{ width: `${hackingProgress}%` }}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
-                  </div>
-                </div>
-                <div className="text-green-400 font-mono text-lg">
-                  {Math.round(hackingProgress)}%
-                </div>
-              </div>
-              <div className="text-green-500/50 font-mono text-xs">
-                ▄▄▄▄▄ TERMINAL ACCESS ▄▄▄▄▄
-              </div>
-            </div>
-          </div>
-        )}
+        <StartupOverlay visible={showStartup} text={hackingText} progress={hackingProgress} />
         {!showStartup && !gameStarted && (
           <div className="absolute inset-0 z-20 bg-black/80 backdrop-blur-sm flex items-center justify-center">
             <div className="text-center">
@@ -551,6 +557,7 @@ export default function CayoFingerprint({ user }: CayoFingerprintProps) {
           isVisible={isScanning}
           onComplete={handleScanComplete}
           isCorrect={scanResult}
+          skipAnimation={skipCutscenes}
         />
       </div>
     </div>

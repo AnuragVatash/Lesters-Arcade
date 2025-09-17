@@ -1,22 +1,20 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
 import React, { useState, useEffect, useCallback } from "react";
-// Removed ScanningPopup - using simple alert instead
-import TimeComparisonDisplay from "@/components/ui/TimeComparison"; // Assuming path
-import { submitTime as submitLeaderboardTime } from "@/lib/leaderboard"; // Assuming path
-import { useOracle } from "@/hooks/useOracle"; // Assuming path
+import TimeComparisonDisplay from "@/components/ui/TimeComparison";
+import { submitTime as submitLeaderboardTime } from "@/lib/leaderboard";
+import { useOracle } from "@/hooks/useOracle";
 import ParticleSystem from "@/components/effects/ParticleSystem";
+import StartupOverlay from "@/components/ui/StartupOverlay";
 
-interface User {
-  username: string;
-  isGuest: boolean;
-}
+import { type User } from "@/lib/auth";
 
 interface NumberFinderProps {
   user: User;
+  skipCutscenes?: boolean;
 }
 
-export default function NumberFinder({ user }: NumberFinderProps) {
+export default function NumberFinder({ user, skipCutscenes = false }: NumberFinderProps) {
   // Create array of 8 Rows with 10 double digit numbers each. pick a random array and random index for example arr[row[0]col[0]]]
   //This picks the first row first column the user has to select this index using wasd keys.
   // Game is supposed to be for selecting 4 elements but sinnce the elements are always in the same order it doesn't matter
@@ -131,6 +129,16 @@ export default function NumberFinder({ user }: NumberFinderProps) {
   useEffect(() => {
     if (!showStartup) return;
 
+    // Fast path when skip is enabled: briefly show the overlay, then continue
+    if (skipCutscenes) {
+      setHackingText("INITIALIZING HACK PROTOCOL...");
+      setHackingProgress(100);
+      const t = setTimeout(() => {
+        setShowStartup(false);
+      }, 300);
+      return () => clearTimeout(t);
+    }
+
     const hackingSteps = [
       { text: "INITIALIZING HACK PROTOCOL...", duration: 800 },
       { text: "BYPASSING SECURITY FIREWALL...", duration: 1200 },
@@ -142,11 +150,14 @@ export default function NumberFinder({ user }: NumberFinderProps) {
 
     let currentStep = 0;
     let currentProgress = 0;
+    let progressInterval: NodeJS.Timeout | null = null;
+    let stepTimeout: NodeJS.Timeout | null = null;
+    let finalTimeout: NodeJS.Timeout | null = null;
 
     const updateProgress = () => {
       if (currentStep >= hackingSteps.length) {
         setHackingProgress(100);
-        setTimeout(() => {
+        finalTimeout = setTimeout(() => {
           setShowStartup(false);
         }, 500);
         return;
@@ -156,16 +167,16 @@ export default function NumberFinder({ user }: NumberFinderProps) {
       setHackingText(step.text);
 
       const stepIncrement = 100 / hackingSteps.length;
-      const progressInterval = setInterval(() => {
+      progressInterval = setInterval(() => {
         currentProgress += 2;
         setHackingProgress(
           Math.min(currentProgress, (currentStep + 1) * stepIncrement)
         );
 
         if (currentProgress >= (currentStep + 1) * stepIncrement) {
-          clearInterval(progressInterval);
+          if (progressInterval) clearInterval(progressInterval);
           currentStep++;
-          setTimeout(updateProgress, 200);
+          stepTimeout = setTimeout(updateProgress, 200);
         }
       }, step.duration / (stepIncrement / 2));
     };
@@ -174,8 +185,11 @@ export default function NumberFinder({ user }: NumberFinderProps) {
 
     return () => {
       clearTimeout(startTimeout);
+      if (progressInterval) clearInterval(progressInterval);
+      if (stepTimeout) clearTimeout(stepTimeout);
+      if (finalTimeout) clearTimeout(finalTimeout);
     };
-  }, [showStartup]);
+  }, [showStartup, skipCutscenes]);
 
   // Effect for keyboard navigation
   useEffect(() => {
@@ -356,6 +370,7 @@ export default function NumberFinder({ user }: NumberFinderProps) {
     gameStartTime,
     user,
     resetOracle,
+    skipCutscenes,
   ]);
 
   // Enter key support for submit
@@ -396,37 +411,7 @@ export default function NumberFinder({ user }: NumberFinderProps) {
       />
       <div className="absolute inset-0 p-4">
         {showStartup ? (
-          <div className="absolute inset-0 z-20 bg-black/95 backdrop-blur-sm flex items-center justify-center">
-            <div className="text-center max-w-md">
-              <div className="mb-8">
-                <div className="text-green-400 font-mono text-2xl mb-2 animate-pulse">
-                  [SYSTEM] BREACH IN PROGRESS
-                </div>
-                <div className="text-green-300 font-mono text-sm mb-6">
-                  {hackingText}
-                </div>
-
-                {/* Progress Bar */}
-                <div className="w-full bg-gray-800 rounded-full h-3 mb-4 border border-green-500/50">
-                  <div
-                    className="bg-gradient-to-r from-green-600 to-green-400 h-3 rounded-full transition-all duration-300 relative overflow-hidden"
-                    style={{ width: `${hackingProgress}%` }}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
-                  </div>
-                </div>
-
-                <div className="text-green-400 font-mono text-lg">
-                  {Math.round(hackingProgress)}%
-                </div>
-              </div>
-
-              {/* Terminal-style decoration */}
-              <div className="text-green-500/50 font-mono text-xs">
-                ▄▄▄▄▄ TERMINAL ACCESS ▄▄▄▄▄
-              </div>
-            </div>
-          </div>
+          <StartupOverlay visible={showStartup} text={hackingText} progress={hackingProgress} />
         ) : !gameStarted ? (
           <div className="absolute inset-0 z-20 bg-black/80 backdrop-blur-sm flex items-center justify-center">
             <div className="text-center">
@@ -493,9 +478,9 @@ export default function NumberFinder({ user }: NumberFinderProps) {
         <TimeComparisonDisplay
           comparison={timeComparison}
           onClose={() => {
-            // Close summary and show the Number Finder protocol loading screen again
-            setTimeComparison(null);
-            setShowStartup(true);
+        // Close summary and show the Number Finder protocol loading screen again
+        setTimeComparison(null);
+        setShowStartup(true);
             setHackingProgress(0);
             setHackingText("INITIALIZING HACK PROTOCOL...");
           }}

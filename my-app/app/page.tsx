@@ -13,8 +13,6 @@ import VolumeControl from "@/components/ui/VolumeControl";
 import { getCurrentUser, type User } from "@/lib/auth";
 import { generateTestData } from "@/lib/leaderboard";
 import { useSimpleAudio } from "@/lib/simpleAudio";
-// import { AnimationManager } from "@/lib/animations";
-// import { InputManager } from "@/lib/inputSystem";
 
 type Game = "casino" | "cayo" | "number";
 type Page = "games" | "leaderboard";
@@ -49,6 +47,7 @@ export default function Home() {
     "matrix"
   );
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
+  const [skipCutscenes, setSkipCutscenes] = useState(false);
 
   // Audio system
   const audio = useSimpleAudio();
@@ -57,9 +56,6 @@ export default function Home() {
   audioRef.current = audio;
 
   // Refs for systems
-  // const audioManagerRef = useRef<AudioManager | null>(null);
-  // const animationManagerRef = useRef<AnimationManager | null>(null);
-  // const inputManagerRef = useRef<InputManager | null>(null);
   const hasInitializedRef = useRef(false);
 
   useEffect(() => {
@@ -213,11 +209,6 @@ export default function Home() {
     if (audioEnabled) {
       audio.playSound("login");
     }
-
-    // Add login animation (temporarily disabled)
-    // if (animationManagerRef.current) {
-    //   animationManagerRef.current.createFadeInEffect(document.body, 1000);
-    // }
   };
 
   const handleLogout = () => {
@@ -243,13 +234,13 @@ export default function Home() {
 
     switch (activeGame) {
       case "casino":
-        return <CasinoFingerprint user={user} />;
+        return <CasinoFingerprint user={user} skipCutscenes={skipCutscenes} />;
       case "cayo":
-        return <CayoFingerprint user={user} />;
+        return <CayoFingerprint user={user} skipCutscenes={skipCutscenes} />;
       case "number":
-        return <NumberFinder user={user} />;
+        return <NumberFinder user={user} skipCutscenes={skipCutscenes} />;
       default:
-        return <CayoFingerprint user={user} />;
+        return <CayoFingerprint user={user} skipCutscenes={skipCutscenes} />;
     }
   };
 
@@ -414,8 +405,26 @@ export default function Home() {
           </div>
         )}
       </div>
+      {/* Skip Cutscene Button - Bottom Left */}
+      <button
+        onClick={() => {
+          setSkipCutscenes(!skipCutscenes);
+          if (audioEnabled) {
+            audio.playSound('click');
+          }
+        }}
+        className={`fixed bottom-4 left-4 z-20 px-3 py-2 text-xs font-mono font-medium transition-all duration-200 border rounded-md ${
+          skipCutscenes
+            ? "text-yellow-400 border-yellow-500/50 bg-yellow-900/20 hover:bg-yellow-900/30"
+            : "text-gray-400 border-gray-500/30 bg-gray-900/20 hover:bg-gray-800/30 hover:text-gray-300"
+        }`}
+        title={skipCutscenes ? "Disable skip cutscenes mode" : "Enable skip cutscenes mode - disables loading screens and animations"}
+      >
+        <span className="mr-1">{skipCutscenes ? "⚡" : "🎬"}</span>
+        {skipCutscenes ? "SKIP.on" : "SKIP.off"}
+      </button>
+
       <SystemStatus />
-      {/* Audio system is now integrated via VolumeControl */}
     </div>
   );
 }

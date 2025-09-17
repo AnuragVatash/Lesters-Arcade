@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { type User } from "@/lib/auth";
 import { submitTime as submitLeaderboardTime } from "@/lib/leaderboard";
 import TimeComparisonDisplay from "@/components/ui/TimeComparison";
+import StartupOverlay from "@/components/ui/StartupOverlay";
 import ScanningPopup from "@/components/ui/ScanningPopup";
 import { useOracle } from "@/hooks/useOracle";
 import ParticleSystem from "@/components/effects/ParticleSystem";
@@ -39,9 +40,10 @@ function shuffle<T>(arr: T[]): T[] {
 
 interface CasinoFingerprintProps {
   user: User;
+  skipCutscenes?: boolean;
 }
 
-export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
+export default function CasinoFingerprint({ user, skipCutscenes = false }: CasinoFingerprintProps) {
   // Responsive scale based on container width
   const [containerWidth, setContainerWidth] = useState(1280);
   const SCALE = containerWidth / 1920;
@@ -53,13 +55,16 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
 
   useEffect(() => {
     const updateScale = () => {
+      if (typeof window === 'undefined') return;
       const maxWidth = Math.min(window.innerWidth - 32, 1280); // 32px for padding
       setContainerWidth(maxWidth);
     };
 
     updateScale();
-    window.addEventListener("resize", updateScale);
-    return () => window.removeEventListener("resize", updateScale);
+    if (typeof window !== 'undefined') {
+      window.addEventListener("resize", updateScale);
+      return () => window.removeEventListener("resize", updateScale);
+    }
   }, []);
 
   // Initialize audio and animation systems (temporarily disabled)
@@ -172,6 +177,16 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
   useEffect(() => {
     if (!showStartup) return;
 
+    // Fast path when skip is enabled: briefly show the overlay, then continue
+    if (skipCutscenes) {
+      setHackingText("INITIALIZING HACK PROTOCOL...");
+      setHackingProgress(100);
+      const t = setTimeout(() => {
+        setShowStartup(false);
+      }, 300);
+      return () => clearTimeout(t);
+    }
+
     const hackingSteps = [
       { text: "INITIALIZING HACK PROTOCOL...", duration: 800 },
       { text: "BYPASSING SECURITY FIREWALL...", duration: 1200 },
@@ -216,7 +231,7 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
     return () => {
       clearTimeout(startTimeout);
     };
-  }, [showStartup]);
+  }, [showStartup, skipCutscenes]);
 
   const buildRoundGrid = (target: number) => {
     // Use ONLY the target set's pieces: 1..8
@@ -516,34 +531,7 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
         className="relative bg-black text-white w-full max-w-[1280px] mx-auto border-2 border-green-500/30 shadow-2xl shadow-green-500/20 rounded-lg overflow-hidden"
         style={{ width: containerWidth, height: (containerWidth * 9) / 16 }}
       >
-        {showStartup && (
-          <div className="absolute inset-0 z-30 bg-black/95 backdrop-blur-sm flex items-center justify-center">
-            <div className="text-center max-w-md">
-              <div className="mb-8">
-                <div className="text-green-400 font-mono text-2xl mb-2 animate-pulse">
-                  [SYSTEM] BREACH IN PROGRESS
-                </div>
-                <div className="text-green-300 font-mono text-sm mb-6">
-                  {hackingText}
-                </div>
-                <div className="w-full bg-gray-800 rounded-full h-3 mb-4 border border-green-500/50">
-                  <div
-                    className="bg-gradient-to-r from-green-600 to-green-400 h-3 rounded-full transition-all duration-300 relative overflow-hidden"
-                    style={{ width: `${hackingProgress}%` }}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
-                  </div>
-                </div>
-                <div className="text-green-400 font-mono text-lg">
-                  {Math.round(hackingProgress)}%
-                </div>
-              </div>
-              <div className="text-green-500/50 font-mono text-xs">
-                ▄▄▄▄▄ TERMINAL ACCESS ▄▄▄▄▄
-              </div>
-            </div>
-          </div>
-        )}
+        <StartupOverlay visible={showStartup} text={hackingText} progress={hackingProgress} />
         <img
           className="ml-auto"
           src={"/casinoFingerprints/status_bar.png"}
@@ -719,6 +707,7 @@ export default function CasinoFingerprint({ user }: CasinoFingerprintProps) {
         isVisible={isScanning}
         onComplete={handleScanComplete}
         isCorrect={scanResult}
+        skipAnimation={skipCutscenes}
       />
     </div>
   );

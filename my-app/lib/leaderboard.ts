@@ -33,7 +33,11 @@ export function getAllLeaderboardEntries(): LeaderboardEntry[] {
 // Save leaderboard entries
 function saveLeaderboardEntries(entries: LeaderboardEntry[]): void {
   if (typeof window === 'undefined') return;
-  localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(entries));
+  try {
+    localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(entries));
+  } catch (error) {
+    console.warn('Failed to save leaderboard entries to localStorage:', error);
+  }
 }
 
 // Get user's best time for a specific game

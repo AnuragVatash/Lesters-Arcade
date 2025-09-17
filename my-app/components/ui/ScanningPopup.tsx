@@ -6,9 +6,10 @@ interface ScanningPopupProps {
   isVisible: boolean;
   onComplete: (isCorrect: boolean) => void;
   isCorrect: boolean;
+  skipAnimation?: boolean;
 }
 
-export default function ScanningPopup({ isVisible, onComplete, isCorrect }: ScanningPopupProps) {
+export default function ScanningPopup({ isVisible, onComplete, isCorrect, skipAnimation = false }: ScanningPopupProps) {
   const [dots, setDots] = useState(0);
   const [progress, setProgress] = useState(0);
   const [scanComplete, setScanComplete] = useState(false);
@@ -22,6 +23,16 @@ export default function ScanningPopup({ isVisible, onComplete, isCorrect }: Scan
       setScanComplete(false);
       setScanText('INITIALIZING SCAN PROTOCOL');
       setTerminalLines([]);
+      return;
+    }
+
+    // Skip animation mode - immediately show result
+    if (skipAnimation) {
+      setProgress(100);
+      setScanComplete(true);
+      setScanText('SCAN COMPLETE');
+      setTerminalLines(['> SCAN COMPLETE']);
+      setTimeout(() => onComplete(isCorrect), 100); // Quick result display
       return;
     }
 
@@ -71,7 +82,7 @@ export default function ScanningPopup({ isVisible, onComplete, isCorrect }: Scan
       clearInterval(progressInterval);
       clearInterval(textInterval);
     };
-  }, [isVisible, isCorrect, onComplete]);
+  }, [isVisible, isCorrect, onComplete, skipAnimation]);
 
   if (!isVisible) return null;
 

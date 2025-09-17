@@ -138,13 +138,13 @@ export default function LeaderboardPage({ onBack }: LeaderboardPageProps) {
   return (
     <div className="min-h-screen bg-black text-white p-4 sm:p-6 relative overflow-hidden">
       {/* Matrix background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-black via-green-950/20 to-black"></div>
-      <div className="absolute inset-0 opacity-5">
+      <div className="absolute inset-0 bg-gradient-to-br from-black via-green-950/20 to-black" aria-hidden="true"></div>
+      <div className="absolute inset-0 opacity-5" aria-hidden="true">
         <div className="grid grid-cols-20 grid-rows-20 h-full w-full">
           {Array.from({ length: 400 }).map((_, i) => (
-            <div 
-              key={i} 
-              className="border border-green-500/20 animate-pulse" 
+            <div
+              key={i}
+              className="border border-green-500/20 animate-pulse"
               style={{ animationDelay: `${i * 0.1}s`, animationDuration: '3s' }}
             ></div>
           ))}
@@ -219,13 +219,14 @@ export default function LeaderboardPage({ onBack }: LeaderboardPageProps) {
         {/* Leaderboard Table */}
         <div className="bg-black/90 border border-green-500/30 rounded-lg overflow-hidden shadow-2xl shadow-green-500/20 backdrop-blur-sm">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full" aria-label="Leaderboard table">
+              <caption className="sr-only">Leaderboard records for selected game</caption>
               <thead>
                 <tr className="bg-green-900/20 border-b border-green-500/30">
-                  <th className="text-left py-3 sm:py-4 px-3 sm:px-6 font-mono font-medium text-green-400 text-sm sm:text-base">[RANK]</th>
-                  <th className="text-left py-3 sm:py-4 px-3 sm:px-6 font-mono font-medium text-green-400 text-sm sm:text-base">[USER_ID]</th>
-                  <th className="text-left py-3 sm:py-4 px-3 sm:px-6 font-mono font-medium text-green-400 text-sm sm:text-base">[EXEC_TIME]</th>
-                  <th className="text-left py-3 sm:py-4 px-3 sm:px-6 font-mono font-medium text-green-400 text-sm sm:text-base hidden sm:table-cell">[TIMESTAMP]</th>
+                  <th scope="col" className="text-left py-3 sm:py-4 px-3 sm:px-6 font-mono font-medium text-green-400 text-sm sm:text-base">[RANK]</th>
+                  <th scope="col" className="text-left py-3 sm:py-4 px-3 sm:px-6 font-mono font-medium text-green-400 text-sm sm:text-base">[USER_ID]</th>
+                  <th scope="col" className="text-left py-3 sm:py-4 px-3 sm:px-6 font-mono font-medium text-green-400 text-sm sm:text-base">[EXEC_TIME]</th>
+                  <th scope="col" className="text-left py-3 sm:py-4 px-3 sm:px-6 font-mono font-medium text-green-400 text-sm sm:text-base hidden sm:table-cell">[TIMESTAMP]</th>
                 </tr>
               </thead>
               <tbody>
@@ -283,7 +284,9 @@ export default function LeaderboardPage({ onBack }: LeaderboardPageProps) {
         </div>
 
         {/* Pagination */}
-        {renderPagination()}
+        <nav aria-label="Leaderboard pagination">
+          {renderPagination()}
+        </nav>
 
         {/* User Stats Footer */}
         {currentUser && (
@@ -291,17 +294,17 @@ export default function LeaderboardPage({ onBack }: LeaderboardPageProps) {
             <div className="px-4 py-3">
               <h3 className="text-lg font-bold text-white mb-3 text-center">Your Stats</h3>
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full" aria-label="Current user stats">
                   <thead>
                     <tr className="bg-gray-700 border-b border-gray-600">
-                      <th className="text-left py-2 px-3 sm:px-6 font-medium text-gray-300 text-sm sm:text-base">Rank</th>
-                      <th className="text-left py-2 px-3 sm:px-6 font-medium text-gray-300 text-sm sm:text-base">Username</th>
-                      <th className="text-left py-2 px-3 sm:px-6 font-medium text-gray-300 text-sm sm:text-base">Time</th>
-                      <th className="text-left py-2 px-3 sm:px-6 font-medium text-gray-300 text-sm sm:text-base hidden sm:table-cell">Status</th>
+                      <th scope="col" className="text-left py-2 px-3 sm:px-6 font-medium text-gray-300 text-sm sm:text-base">Rank</th>
+                      <th scope="col" className="text-left py-2 px-3 sm:px-6 font-medium text-gray-300 text-sm sm:text-base">Username</th>
+                      <th scope="col" className="text-left py-2 px-3 sm:px-6 font-medium text-gray-300 text-sm sm:text-base">Time</th>
+                      <th scope="col" className="text-left py-2 px-3 sm:px-6 font-medium text-gray-300 text-sm sm:text-base hidden sm:table-cell">Status</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="bg-gray-750">
+                    <tr className="bg-gray-800">
                       <td className="py-2 px-3 sm:px-6">
                         <div className="flex items-center">
                           {userStats.hasPlayed && userStats.rank && userStats.rank <= 3 && (
